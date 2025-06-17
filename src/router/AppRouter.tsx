@@ -9,6 +9,7 @@ import DashboardHome from '../pages/dashboard/DashboardHome';
 import History from '../pages/dashboard/History';
 import Simulator from '../pages/dashboard/Simulator';
 import { ResidenceSettings } from '../pages/dashboard/ResidenceSettings';
+import TipsPage from '../pages/dashboard/TipsPage';
 import Profile from '../pages/dashboard/Profile';
 import AccountSettings from '../pages/dashboard/AccountSettings';
 import { MainLayout } from '../components/layout/MainLayout';
@@ -49,6 +50,7 @@ export const AppRouter = () => {
           <Route path="historico" element={<History />} />
           <Route path="simulador" element={<Simulator />} />
           <Route path="residencia" element={<ResidenceSettings />} />
+          <Route path="dicas" element={<TipsPage />} />
           <Route path="perfil" element={<Profile />} />
           <Route path="conta/configuracoes" element={<AccountSettings />} />
         </Route>

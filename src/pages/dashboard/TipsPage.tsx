@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Lightbulb } from 'lucide-react';
-import { fetchDashboardData } from '../../services/api';
+import api from '../../services/api';
 
 // --- Tipagem para as dicas ---
 interface Tip {
@@ -11,31 +11,41 @@ interface Tip {
   content: string;
 }
 
-// --- Componentes Estilizados (respeitando o tema) ---
-
+// --- Componentes Estilizados ---
 const TipsWrapper = styled.div`
   animation: fadeIn 0.5s ease-in-out;
+
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `;
 
 const Header = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+
   h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
+    font-size: 2.5rem;
+    font-weight: 800;
     color: ${({ theme }) => theme.text};
+    margin-bottom: 0.5rem;
   }
+
   p {
+    font-size: 1.2rem;
     color: ${({ theme }) => theme.textSecondary};
   }
 `;
 
 const TipsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
 `;
 
@@ -50,7 +60,7 @@ const TipCard = styled.div`
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 20px ${({ theme }) => theme.primary}20;
+    box-shadow: 0 4px 25px ${({ theme }) => theme.primary}20;
   }
 `;
 
@@ -61,48 +71,56 @@ const TipHeader = styled.div`
   margin-bottom: 1rem;
 `;
 
-const TipTitle = styled.h3`
-  font-size: 1.1rem;
-  font-weight: 600;
+const IconWrapper = styled.div`
   color: ${({ theme }) => theme.primary};
+`;
+
+const TipTitle = styled.h3`
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
 `;
 
 const TipContent = styled.p`
   font-size: 0.95rem;
   line-height: 1.6;
   color: ${({ theme }) => theme.textSecondary};
+  flex-grow: 1;
+`;
+
+const LoadingState = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.1rem;
+  color: ${({ theme }) => theme.textSecondary};
 `;
 
 // --- Componente Principal da Página ---
-
 const TipsPage = () => {
   const [tips, setTips] = useState<Tip[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 3. LÓGICA DE BUSCA CORRIGIDA
-    const loadData = async () => {
+    const loadTips = async () => {
+      setLoading(true);
       try {
-        // Chama a função que busca TUDO
-        const apiData = await fetchDashboardData(); 
-        // Pega apenas a parte de 'tips' dos dados retornados
-        setTips(apiData.tips.map((tip: any) => ({
-          id: tip.id,
-          title: tip.title,
-          content: tip.content ?? tip.description ?? '', // Ajuste conforme o nome correto do campo de texto
-        }))); 
+        // A API em db.json tem a rota como "tips"
+        const response = await api.get('/tips');
+        setTips(response.data);
       } catch (error) {
-        console.error("Erro ao buscar dados do dashboard:", error);
+        console.error("Erro ao buscar as dicas de economia:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
+    loadTips();
   }, []);
 
   if (loading) {
-    return <div>Carregando dicas...</div>;
+    return <LoadingState>Carregando dicas...</LoadingState>;
   }
 
   return (
@@ -115,10 +133,12 @@ const TipsPage = () => {
         {tips.map(tip => (
           <TipCard key={tip.id}>
             <TipHeader>
-              <Lightbulb size={22} color="currentColor" />
+              <IconWrapper>
+                <Lightbulb size={24} />
+              </IconWrapper>
               <TipTitle>{tip.title}</TipTitle>
             </TipHeader>
-            <TipContent>{tip.description}</TipContent>
+            <TipContent>{tip.content}</TipContent>
           </TipCard>
         ))}
       </TipsGrid>
