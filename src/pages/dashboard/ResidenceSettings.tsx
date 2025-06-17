@@ -1,4 +1,3 @@
-// src/pages/dashboard/ResidenceSettings.tsx
 import { useEffect } from 'react';
 import styled from 'styled-components';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -21,62 +20,79 @@ const settingsSchema = z.object({
 type SettingsFormData = z.infer<typeof settingsSchema>;
 
 // --- COMPONENTES ESTILIZADOS ---
-
 const SettingsWrapper = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr; 
+  grid-template-columns: 2fr 1fr;
   gap: 2.5rem;
   align-items: flex-start;
-
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  
   @media (max-width: 992px) {
     grid-template-columns: 1fr;
+    padding: 1rem;
   }
 `;
 
-const FormContainer = styled.div``;
+const FormContainer = styled.div`
+`;
 
-const Header = styled.div`
-  margin-bottom: 2rem;
+const Header = styled.header`
+  margin-bottom: 2.5rem;
   h1 {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2.5rem;
+    font-weight: 800;
     color: ${({ theme }) => theme.text};
+    margin-bottom: 0.5rem;
   }
   p {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: ${({ theme }) => theme.textSecondary};
+    opacity: 0.9;
   }
 `;
 
 const FormCard = styled.form`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: ${({ theme }) => theme.primary};
+    border-radius: 16px 16px 0 0;
+  }
 `;
 
 const InfoPanel = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 2rem;
-  position: sticky; /* Painel fica fixo ao rolar a página */
-  top: 90px;
-
-  img {
-    width: 100%;
-    max-width: 200px;
-    display: block;
-    margin: 0 auto 1.5rem auto;
-  }
-
+  position: sticky;
+  top: 170px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+  color: ${({ theme }) => theme.text};
+  
   h4 {
     font-size: 1.2rem;
     color: ${({ theme }) => theme.text};
     margin-bottom: 1rem;
     text-align: center;
   }
-
+  
   ul {
     list-style: none;
     padding: 0;
@@ -84,7 +100,7 @@ const InfoPanel = styled.div`
     flex-direction: column;
     gap: 1rem;
   }
-
+  
   li {
     display: flex;
     align-items: flex-start;
@@ -92,7 +108,14 @@ const InfoPanel = styled.div`
     color: ${({ theme }) => theme.textSecondary};
     font-size: 0.9rem;
     line-height: 1.5;
-
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
     svg {
       color: ${({ theme }) => theme.primary};
       width: 18px;
@@ -104,17 +127,17 @@ const InfoPanel = styled.div`
 
 const InputGroup = styled.div`
   margin-bottom: 1.5rem;
-  
   label {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 0.75rem;
     font-weight: 600;
     color: ${({ theme }) => theme.text};
     margin-bottom: 0.75rem;
-
     svg {
       color: ${({ theme }) => theme.primary};
+      margin-top: 2px;
     }
   }
 `;
@@ -127,12 +150,16 @@ const Input = styled.input`
   color: ${({ theme }) => theme.text};
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-
+  transition: all 0.2s ease;
+  
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.primary};
     box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}33;
+  }
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.primary}33;
   }
 `;
 
@@ -144,12 +171,17 @@ const Select = styled.select`
   color: ${({ theme }) => theme.text};
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.primary};
     box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}33;
+  }
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.primary}33;
   }
 `;
 
@@ -157,6 +189,7 @@ const ErrorMessage = styled.p`
   color: #e53e3e;
   font-size: 0.875rem;
   margin-top: 0.5rem;
+  padding-left: 2.25rem;
 `;
 
 const SubmitButton = styled.button`
@@ -168,11 +201,13 @@ const SubmitButton = styled.button`
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
   width: 100%;
-
+  margin-top: 1rem;
+  
   &:hover {
     background-color: ${({ theme }) => theme.primaryHover};
+    transform: translateY(-2px);
   }
   
   &:disabled {
@@ -180,9 +215,6 @@ const SubmitButton = styled.button`
     cursor: not-allowed;
   }
 `;
-
-
-// --- COMPONENTE PRINCIPAL APRIMORADO ---
 
 export const ResidenceSettings = () => {
   const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SettingsFormData>({
@@ -194,7 +226,6 @@ export const ResidenceSettings = () => {
       try {
         const response = await api.get('/residence_config');
         const data = response.data;
-        // Popula todos os campos do formulário com os dados da API
         setValue('name', data.name);
         setValue('type', data.type);
         setValue('residents', data.residents);
@@ -210,9 +241,25 @@ export const ResidenceSettings = () => {
   const onSubmit: SubmitHandler<SettingsFormData> = async (data) => {
     try {
       await api.patch('/residence_config', data);
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('Configurações salvas com sucesso!', {
+        style: {
+          background: '#38A169',
+          color: 'white',
+          borderRadius: '8px',
+          padding: '16px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        },
+      });
     } catch (error) {
-      toast.error('Ocorreu um erro ao salvar as configurações.');
+      toast.error('Ocorreu um erro ao salvar as configurações.', {
+        style: {
+          background: '#E53E3E',
+          color: 'white',
+          borderRadius: '8px',
+          padding: '16px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        },
+      });
       console.error("Erro ao salvar:", error);
     }
   };
@@ -226,7 +273,6 @@ export const ResidenceSettings = () => {
             <h1>Configurar Residência</h1>
             <p>Ajuste as informações da sua casa para obter análises mais precisas.</p>
           </Header>
-
           <FormCard onSubmit={handleSubmit(onSubmit)}>
             {/* Campo Nome da Residência */}
             <InputGroup>
@@ -245,7 +291,7 @@ export const ResidenceSettings = () => {
               </Select>
               {errors.type && <ErrorMessage>{errors.type.message}</ErrorMessage>}
             </InputGroup>
-            
+
             {/* Campo Número de Moradores */}
             <InputGroup>
               <label htmlFor="residents"><Users />Número de Moradores</label>
@@ -274,7 +320,6 @@ export const ResidenceSettings = () => {
         </FormContainer>
 
         <InfoPanel>
-          {/* <img src={illustration} alt="Ilustração de uma casa com painéis solares" /> */}
           <h4>Por que esses dados são importantes?</h4>
           <ul>
             <li>
@@ -295,3 +340,5 @@ export const ResidenceSettings = () => {
     </>
   );
 };
+
+export default ResidenceSettings;
