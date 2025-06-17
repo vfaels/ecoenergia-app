@@ -7,7 +7,6 @@ import { BarChart3, Bot, Lightbulb, ArrowRight, History, Settings } from 'lucide
 import { PublicHeader } from '../components/common/PublicHeader';
 import { useAuth } from '../contexts/authContext';
 
-// Animação sutil para o background
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -18,8 +17,8 @@ const gradientAnimation = keyframes`
 
 const PageWrapper = styled.div`
   font-family: 'Poppins', sans-serif;
-  background-color: ${({ theme }) => theme.body}; /* Usa a cor do tema */
-  color: ${({ theme }) => theme.text}; /* Usa a cor do tema */
+  background-color: ${({ theme }) => theme.body}; 
+  color: ${({ theme }) => theme.text}; 
 `;
 
 const HeroSection = styled.section`
@@ -27,9 +26,8 @@ const HeroSection = styled.section`
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 8rem 2rem;
+  padding: 3rem 2rem;
   padding-top: 10rem;
-  /* O fundo agora se adapta ao tema */
   background: ${({ theme }) => theme.theme === 'light' 
     ? 'linear-gradient(135deg, #d8f3dc, #b7e4c7, #95d5b2)' 
     : 'linear-gradient(135deg, #1b4332, #2d6a4f, #40916c)'};
@@ -41,7 +39,6 @@ const HeroSection = styled.section`
     font-size: 3rem;
     font-weight: 800;
     line-height: 1.2;
-    /* A cor do texto principal se adapta ao tema */
     color: ${({ theme }) => theme.theme === 'light' ? '#1b4332' : '#FFFFFF'};
     max-width: 800px;
     margin-bottom: 1.5rem;
@@ -57,8 +54,8 @@ const HeroSection = styled.section`
 `;
 
 const PrimaryCallToAction = styled(Link)`
-  background-color: ${({ theme }) => theme.primary}; /* Usa a cor do tema */
-  color: #FFFFFF; /* Branco funciona bem em ambos os temas */
+  background-color: ${({ theme }) => theme.primary}; 
+  color: #FFFFFF; 
   padding: 0.8rem 2rem;
   border-radius: 50px;
   text-decoration: none;
@@ -70,7 +67,7 @@ const PrimaryCallToAction = styled(Link)`
   transition: background-color 0.3s ease, transform 0.3s ease;
 
   &:hover {
-    background-color: ${({ theme }) => theme.primaryHover}; /* Usa a cor do tema */
+    background-color: ${({ theme }) => theme.primaryHover}; 
     transform: translateY(-2px);
   }
 `;
@@ -79,19 +76,19 @@ const Section = styled.section`
   padding: 6rem 5%;
   text-align: center;
   position: relative;
-  background-color: ${({ theme, color }) => color || theme.body}; /* Usa a cor do tema */
+  background-color: ${({ theme, color }) => color || theme.body}; 
   transition: background-color 0.3s ease;
 
   h3 {
     font-size: 2.5rem;
     font-weight: 700;
-    color: ${({ theme }) => theme.primary}; /* Usa a cor do tema */
+    color: ${({ theme }) => theme.primary};
     margin-bottom: 1rem;
   }
 
   p.section-description {
     font-size: 1.1rem;
-    color: ${({ theme }) => theme.textSecondary}; /* Usa a cor do tema */
+    color: ${({ theme }) => theme.textSecondary}; 
     line-height: 1.7;
     max-width: 700px;
     margin: 0 auto 4rem auto;
@@ -115,25 +112,60 @@ const ShapeDivider = styled.div`
   }
 
   .shape-fill {
-    fill: ${({ color }) => color}; /* Usa a cor da prop para a transição */
+    fill: ${({ color }) => color}; 
     transition: fill 0.3s ease;
   }
 `;
 
 const FeatureList = styled.div`
-  /* ... (código sem alterações) ... */
+display: flex;
+flex-direction: column;
+gap: 2rem;
+align-items: center;
+margin: 0 auto 2rem auto;
+width: 100%;
+max-width: 900px;
 `;
 
 const FeatureItem = styled.div`
-  /* A estilização interna já usava variáveis de tema, então está correta */
-  /* ... (código sem alterações) ... */
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  justify-content: center;
+  margin: 0 auto 2.5rem auto;
+  max-width: 700px;
+  padding: 1.5rem;
+  
+
+  svg {
+    flex-shrink: 0;
+    color: ${({ theme }) => theme.primary};
+    transition: color 0.3s ease;
+  }
+
+  .text-content {
+    text-align: left;
+
+    h4 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: ${({ theme }) => theme.theme === 'light' ? '#1b4332' : '#fff'};
+    }
+
+    p {
+      font-size: 1rem;
+      color: ${({ theme }) => theme.textSecondary};
+      margin: 0;
+    }
+  }
 `;
 
 const Footer = styled.footer`
   padding: 3rem 5%;
   text-align: center;
-  background-color: ${({ theme }) => theme.primaryHover}; /* Usa a cor do tema */
-  color: rgba(255, 255, 255, 0.8); /* Branco com transparência funciona bem nos dois temas */
+  background-color: ${({ theme }) => theme.primaryHover}; 
+  color: rgba(255, 255, 255, 0.8);
   transition: background-color 0.3s ease;
 
   p {
@@ -144,7 +176,7 @@ const Footer = styled.footer`
 // --- COMPONENTE PRINCIPAL ---
 
 export const LandingPage = () => {
-  const { isAuthenticated } = useAuth(); // <-- AQUI ESTÁ O USO DO HOOK
+  const { isAuthenticated } = useAuth(); 
   const navigate = useNavigate(); 
 
   useEffect(() => {
