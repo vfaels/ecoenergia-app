@@ -1,85 +1,105 @@
+// src/pages/auth/Register.tsx
+
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import api from '../../services/api';
+import { PublicHeader } from '../../components/common/PublicHeader';
 
+// --- STYLES ---
 
 const RegisterWrapper = styled.div`
   display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  padding: 120px 2rem 2rem 2rem; 
   background-color: ${({ theme }) => theme.body};
 `;
 
-const RegisterForm = styled.form`
-  padding: 2.5rem;
+const RegisterCard = styled.form`
+  background-color: ${({ theme }) => theme.cardBg};
+  padding: 3rem;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
   width: 100%;
   max-width: 450px;
-  background: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.borderColor};
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  text-align: center;
+`;
 
-  h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: ${({ theme }) => theme.text};
-    text-align: center;
-    margin-bottom: 2rem;
-  }
+const Title = styled.h1`
+  font-size: 2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.primary};
+  margin-bottom: 2.5rem;
+`;
 
-  p {
-    text-align: center;
-    margin-top: 1.5rem;
-    color: ${({ theme }) => theme.textSecondary};
+const InputGroup = styled.div`
+  text-align: left;
+  margin-bottom: 1.5rem;
+`;
 
-    a {
-      color: ${({ theme }) => theme.primary};
-      font-weight: 600;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
+const Label = styled.label`
+  display: block;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 0.5rem;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.8rem 1rem;
-  margin-bottom: 1.2rem;
   border: 1px solid ${({ theme }) => theme.borderColor};
-  background-color: ${({ theme }) => theme.body};
-  border-radius: 8px;
+  background-color: ${({ theme }) => theme.bodySecondary};
   color: ${({ theme }) => theme.text};
+  border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.primary};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}30;
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}33; 
   }
 `;
 
-const Button = styled.button`
-  width: 100%;
-  padding: 1rem;
-  background: ${({ theme }) => theme.primary};
+const SubmitButton = styled.button`
+  background-color: ${({ theme }) => theme.primary};
   color: white;
+  padding: 0.9rem 1.5rem;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  margin-top: 1.5rem;
+  width: 100%;
+  transition: background-color 0.3s ease;
 
   &:hover {
     background-color: ${({ theme }) => theme.primaryHover};
   }
 `;
+
+const LoginLink = styled.p`
+  margin-top: 2rem;
+  color: ${({ theme }) => theme.textSecondary};
+
+  a {
+    color: ${({ theme }) => theme.primary};
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+
+// --- COMPONENT ---
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -97,11 +117,8 @@ const Register = () => {
 
     try {
       await api.post('/auth/register', { name, email, password });
-      
       alert('Cadastro realizado com sucesso! Você já pode fazer o login.');
-      
       navigate('/login');
-
     } catch (error: any) {
       console.error('Falha no cadastro:', error);
       const errorMessage = error.response?.data?.message || 'Ocorreu um erro ao tentar cadastrar.';
@@ -110,36 +127,51 @@ const Register = () => {
   };
 
   return (
-    <RegisterWrapper>
-      <RegisterForm onSubmit={handleSubmit}>
-        <h2>Criar Conta</h2>
-        <Input
-          type="text"
-          placeholder="Nome completo"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <Button type="submit">Cadastrar</Button>
-        <p>
-          Já tem uma conta? <Link to="/login">Faça o login</Link>
-        </p>
-      </RegisterForm>
-    </RegisterWrapper>
+    <>
+      <PublicHeader />
+      <RegisterWrapper>
+        <RegisterCard onSubmit={handleSubmit}>
+          <Title>Crie sua conta EcoEnergia</Title>
+          <InputGroup>
+            <Label htmlFor="name">Nome Completo</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Digite seu nome"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="exemplo@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Crie uma senha forte"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </InputGroup>
+          <SubmitButton type="submit">Cadastrar</SubmitButton>
+          <LoginLink>
+            Já tem uma conta? <Link to="/login">Faça o login</Link>
+          </LoginLink>
+        </RegisterCard>
+      </RegisterWrapper>
+    </>
   );
 };
 

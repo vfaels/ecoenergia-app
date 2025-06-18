@@ -1,8 +1,8 @@
-// src/pages/auth/Login.tsx
 import { type FormEvent, useState } from 'react';
-import { useAuth } from '../../contexts/authContext';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { useAuth } from '../../contexts/authContext';
+import { PublicHeader } from '../../components/common/PublicHeader'; // 1. Importar o Header
 
 const LoginWrapper = styled.div`
   display: flex;
@@ -10,13 +10,11 @@ const LoginWrapper = styled.div`
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: ${({ theme }) => theme.bodySecondary};
-  font-family: 'Poppins', sans-serif;
-  padding-top: 80px;
-  transition: background-color 0.3s ease;
+  background-color: ${({ theme }) => theme.body};
+  padding-top: 100px;
 `;
 
-const LoginCard = styled.div`
+const LoginCard = styled.form`
   background-color: ${({ theme }) => theme.cardBg};
   padding: 3rem;
   border-radius: 12px;
@@ -38,16 +36,27 @@ const Title = styled.h1`
 const Subtitle = styled.p`
   color: ${({ theme }) => theme.textSecondary};
   margin-bottom: 2.5rem;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
 `;
 
 const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
   text-align: left;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  & + & {
+    margin-top: 1rem;
+  }
+  &:last-child {
+    margin-bottom: 0;
+  }
+  &:focus-within {
+    label {
+      color: ${({ theme }) => theme.primary};
+    }
+  }
 `;
 
 const Label = styled.label`
@@ -61,7 +70,7 @@ const Input = styled.input`
   width: 100%;
   padding: 0.8rem 1rem;
   border: 1px solid ${({ theme }) => theme.borderColor};
-  background-color: ${({ theme }) => theme.body};
+  background-color: ${({ theme }) => theme.bodySecondary};
   color: ${({ theme }) => theme.text};
   border-radius: 8px;
   font-size: 1rem;
@@ -83,7 +92,10 @@ const SubmitButton = styled.button`
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+  margin-top: 1rem;
+  width: 100%;
   transition: background-color 0.3s ease;
+  
 
   &:hover {
     background-color: ${({ theme }) => theme.primaryHover};
@@ -105,62 +117,54 @@ const SignupLink = styled.p`
   }
 `;
 
-
 const Login = () => {
-  
   const { signIn } = useAuth();
-  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-
     if (!email || !password) {
       alert('Por favor, preencha todos os campos.');
       return;
     }
- 
     await signIn({ email, password });
   };
 
   return (
-    <LoginWrapper>
-      <LoginCard>
-        <Title>Login</Title>
-        <Subtitle>Bem-vindo de volta! Por favor, faça login para continuar.</Subtitle>
-        <Form onSubmit={handleSubmit}>
+    <>
+      <PublicHeader /> {/* 2. Adicionar o Header de volta */}
+      <LoginWrapper>
+        <LoginCard onSubmit={handleSubmit}>
+          <Title>Bem-vindo de volta!</Title>
+          <Subtitle>Acesse sua conta para continuar.</Subtitle>
           <InputGroup>
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Digite seu email"
+            <Input 
+              type="email" 
+              id="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
+              required 
             />
           </InputGroup>
           <InputGroup>
             <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Digite sua senha"
+            <Input 
+              type="password" 
+              id="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
+              required 
             />
           </InputGroup>
           <SubmitButton type="submit">Entrar</SubmitButton>
-        </Form>
-        <SignupLink>
-          Não tem uma conta? <Link to="/register">Registre-se</Link>
-        </SignupLink>
-      </LoginCard>
-    </LoginWrapper>
+          <SignupLink>
+            Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+          </SignupLink>
+        </LoginCard>
+      </LoginWrapper>
+    </>
   );
 };
 

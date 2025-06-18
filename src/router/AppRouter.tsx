@@ -30,7 +30,7 @@ export const AppRouter = () => {
       <Route element={<PublicRoute />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/cadastro" element={<Register />} />
       </Route>
 
       <Route path="/app" element={<ProtectedRoute />}>

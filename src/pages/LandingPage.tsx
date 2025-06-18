@@ -193,7 +193,7 @@ export const LandingPage = () => {
         <HeroSection>
           <h2>Monitore, economize e contribua para um futuro mais verde.</h2>
           <p>EcoEnergia te ajuda a entender e otimizar seu consumo de energia, promovendo a sustentabilidade no seu dia a dia.</p>
-          <PrimaryCallToAction to="/login">
+          <PrimaryCallToAction to="/cadastro">
             Comece agora
             <ArrowRight size={20} />
           </PrimaryCallToAction>
