@@ -6,4 +6,5 @@ const authMiddleware = require('../middlewares/auth.middleware');
 router.get('/summary', authMiddleware.verifyToken, consumptionController.getConsumptionSummary);
 router.get('/history', authMiddleware.verifyToken, consumptionController.getFullHistory);
 
+
 module.exports = router;

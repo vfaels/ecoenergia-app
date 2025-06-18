@@ -11,7 +11,7 @@ interface ResidenceData {
 }
 interface ConsumptionData {
   today_kwh: number;
-  last_7_days: { day: string; consumo: number }[];
+  last_7_days: { date: string; consumo: number }[];
 }
 interface TipData {
   id: number;
