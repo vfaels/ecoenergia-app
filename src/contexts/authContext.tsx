@@ -1,53 +1,106 @@
 // src/contexts/authContext.tsx
-import { createContext, useState, useContext, type ReactNode } from 'react';
+import { createContext, useState, useContext, type ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
-// Tipagem para os dados do usuário (pode expandir depois)
 interface User {
+  id: number;
   name: string;
   email: string;
+  role: 'USER' | 'ADMIN';
 }
 
-// Tipagem para o valor do contexto
 interface AuthContextData {
   isAuthenticated: boolean;
   user: User | null;
-  login: (userData: User) => void;
-  logout: () => void;
+  loading: boolean;
+  signIn: (credentials: { email: string; password: string }) => Promise<void>;
+  signOut: () => void;
 }
 
-// Cria o Contexto
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-// Cria o Provedor do Contexto
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const navigate = useNavigate();
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // A maneira mais simples de verificar a autenticação é ver se existe um usuário
-  const isAuthenticated = !!user;
+  useEffect(() => {
+    async function loadUserFromStorage() {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
 
-  const login = (userData: User) => {
-    // Em um app real, você receberia dados da API e um token aqui
-    setUser(userData);
-    // Redireciona para o dashboard após o login
-    navigate('/app');
+      if (token && userData) {
+        try {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setUser(JSON.parse(userData));
+        } catch (error) {
+          console.error("Erro ao carregar dados do usuário:", error)
+          localStorage.clear();
+        }
+      }
+      setLoading(false);
+    }
+
+    loadUserFromStorage();
+  }, []);
+  
+  const signIn = async ({ email, password }: { email: string; password: string }) => {
+    try {
+      const response = await api.post('/auth/login', {
+        email,
+        password,
+      });
+
+      const { token, user: loggedUser } = response.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(loggedUser));
+
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      setUser(loggedUser);
+      
+      navigate('/app');
+
+    } catch (error) {
+      console.error('Falha no login:', error);
+      alert('Email ou senha inválidos.');
+    }
   };
 
-  const logout = () => {
+  const signOut = () => {
     setUser(null);
-    // Redireciona para a página de login após o logout
+    
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    delete api.defaults.headers.common['Authorization'];
+
     navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated: !!user, 
+      user, 
+      loading,
+      signIn, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook customizado para facilitar o uso do contexto
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
 };

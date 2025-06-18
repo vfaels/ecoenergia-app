@@ -1,9 +1,8 @@
 // src/pages/auth/Login.tsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import styled from 'styled-components';
+import { type FormEvent, useState } from 'react';
 import { useAuth } from '../../contexts/authContext';
-import { PublicHeader } from '../../components/common/PublicHeader';
+import { Link } from 'react-router-dom';
+import styled from 'styled-components';
 
 const LoginWrapper = styled.div`
   display: flex;
@@ -108,59 +107,60 @@ const SignupLink = styled.p`
 
 
 const Login = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  
+  const { signIn } = useAuth();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/app');
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    console.log('Tentativa de login com:', { email, password });
-    login({ name: 'Fael Melo', email: email });
+
+    if (!email || !password) {
+      alert('Por favor, preencha todos os campos.');
+      return;
+    }
+ 
+    await signIn({ email, password });
   };
 
   return (
-    <>
-      <PublicHeader />
-      <LoginWrapper>
-        <LoginCard>
-          <Title>Bem-vindo de volta!</Title>
-          <Subtitle>Acesse sua conta para continuar.</Subtitle>
-          <Form onSubmit={handleSubmit}>
-            <InputGroup>
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                type="email" 
-                id="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
-              />
-            </InputGroup>
-            <InputGroup>
-              <Label htmlFor="password">Senha</Label>
-              <Input 
-                type="password" 
-                id="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-              />
-            </InputGroup>
-            <SubmitButton type="submit">Entrar</SubmitButton>
-          </Form>
-          <SignupLink>
-            Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
-          </SignupLink>
-        </LoginCard>
-      </LoginWrapper>
-    </>
+    <LoginWrapper>
+      <LoginCard>
+        <Title>Login</Title>
+        <Subtitle>Bem-vindo de volta! Por favor, faça login para continuar.</Subtitle>
+        <Form onSubmit={handleSubmit}>
+          <InputGroup>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Digite seu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </InputGroup>
+          <SubmitButton type="submit">Entrar</SubmitButton>
+        </Form>
+        <SignupLink>
+          Não tem uma conta? <Link to="/register">Registre-se</Link>
+        </SignupLink>
+      </LoginCard>
+    </LoginWrapper>
   );
 };
 
