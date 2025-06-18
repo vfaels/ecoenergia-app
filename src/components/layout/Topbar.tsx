@@ -121,7 +121,7 @@ const Separator = styled.hr`
 `;
 
 export const Topbar = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -160,7 +160,10 @@ export const Topbar = () => {
             {theme === 'light' ? <Moon /> : <Sun />}
             <span>Modo {theme === 'light' ? 'Escuro' : 'Claro'}</span>
           </DropdownButton>
-          <DropdownButton onClick={logout}>
+          <DropdownButton onClick={() => {
+            signOut();
+            setDropdownOpen(false);
+          }}>
             <LogOut />
             <span>Sair</span>
           </DropdownButton>
