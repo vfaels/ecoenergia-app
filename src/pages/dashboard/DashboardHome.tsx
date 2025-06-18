@@ -235,7 +235,7 @@ const DashboardHome = () => {
           {isLoading ? (
             <LoadingState>Carregando dados...</LoadingState>
           ) : (
-            <div className="h-[300px] w-full">
+            <div style={{ height: '300px', width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={formattedChartData}>
                   <CartesianGrid 
