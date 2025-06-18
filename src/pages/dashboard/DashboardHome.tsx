@@ -1,37 +1,19 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/authContext";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import { Zap, Users, Home, Lightbulb } from "lucide-react";
-import { fetchDashboardData } from '../../services/api'
+import api from '../../services/api';
 import styled, { useTheme } from "styled-components";
-import { BarChart3 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Zap, Users, Home, Lightbulb, BarChart3 } from "lucide-react";
 
-// --- Tipagem dos Dados ---
-interface ResidenceConfig {
+interface ResidenceData {
   residents: number;
   rooms: number;
 }
-
-interface DailyData {
-  day: string;
-  consumo: number;
-}
-
-interface ConsumptionHistory {
+interface ConsumptionData {
   today_kwh: number;
-  last_7_days: DailyData[];
+  last_7_days: { day: string; consumo: number }[];
 }
-
-interface Tip {
+interface TipData {
   id: number;
   title: string;
 }
@@ -190,32 +172,51 @@ const LoadingState = styled.div`
 const DashboardHome = () => {
   const { user } = useAuth();
   const theme = useTheme();
-  const [residence, setResidence] = useState<ResidenceConfig | null>(null);
-  const [consumption, setConsumption] = useState<ConsumptionHistory | null>(null);
-  const [tips, setTips] = useState<Tip[]>([]);
+
+  const [residence, setResidence] = useState<ResidenceData | null>(null);
+  const [consumption, setConsumption] = useState<ConsumptionData | null>(null);
+  const [tips, setTips] = useState<TipData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       try {
-        const data = await fetchDashboardData();
-        setResidence(data.residence);
-        setConsumption(data.consumption);
-        setTips(data.tips);
+        const tipsRes = await api.get('/tips');
+        setTips(tipsRes.data);
       } catch (error) {
-        console.error("Falha ao buscar dados do dashboard:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Dashboard: Falha ao buscar dicas.", error);
       }
+      try {
+        const residenceRes = await api.get('/residence/me');
+        setResidence(residenceRes.data);
+      } catch (error) {
+        console.error("Dashboard: Falha ao buscar dados da residência.", error);
+      }
+      try {
+        const consumptionRes = await api.get('/consumption/summary');
+        setConsumption(consumptionRes.data);
+      } catch (error) {
+        console.error("Dashboard: Falha ao buscar resumo do consumo.", error);
+      }
+      setIsLoading(false);
     };
+
     fetchData();
-  }, []);
+  }, [user]);
 
   const formattedChartData = consumption?.last_7_days.map(d => ({
     ...d,
     consumo: Number(d.consumo)
   })) || [];
+
+  if (isLoading) {
+    return <LoadingState>Carregando dados do dashboard...</LoadingState>;
+  }
 
   return (
     <DashboardWrapper>
