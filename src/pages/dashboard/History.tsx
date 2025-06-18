@@ -168,7 +168,7 @@ const History = () => {
         <p>Análise detalhada do seu consumo de energia ao longo do tempo</p>
       </Header>
       <Card>
-        <CardTitle><TrendingUp /> Evolução do Consumo (Últimos 30 dias)</CardTitle>
+        <CardTitle><TrendingUp /> Evolução do Consumo (Últimos 7 dias)</CardTitle>
         <ChartContainer>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={formattedChartData}>
