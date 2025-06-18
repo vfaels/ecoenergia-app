@@ -1,24 +1,17 @@
 import { useState, useEffect } from 'react';
 import styled, { useTheme } from 'styled-components';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Calendar, TrendingUp } from 'lucide-react';
 import api from '../../services/api';
 
-// Tipagem dos dados
-interface DailyData {
+interface HistoryData {
   date: string;
   kwh: number;
 }
-
-interface ConsumptionData {
-  last_30_days: DailyData[];
-}
-
-interface ResidenceConfig {
+interface ConfigData {
   kwh_cost: number;
 }
 
-// Estilização dos componentes
 const HistoryWrapper = styled.div`
   max-width: 1200px;
   margin: 0 auto;
@@ -133,19 +126,20 @@ const LoadingState = styled.div`
 
 const History = () => {
   const theme = useTheme();
-  const [consumption, setConsumption] = useState<ConsumptionData | null>(null);
-  const [config, setConfig] = useState<ResidenceConfig | null>(null);
+  const [history, setHistory] = useState<HistoryData[]>([]);
+  const [config, setConfig] = useState<ConfigData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [consumptionRes, configRes] = await Promise.all([
-          api.get('/consumption_history'),
-          api.get('/residence_config')
+        // Chamadas para as novas rotas da API real
+        const [historyRes, configRes] = await Promise.all([
+          api.get('/consumption/history'),
+          api.get('/residence/me') // Usamos a mesma rota da residência para pegar o kwh_cost
         ]);
-        setConsumption(consumptionRes.data);
+        setHistory(historyRes.data);
         setConfig(configRes.data);
       } catch (error) {
         console.error("Falha ao buscar dados do histórico:", error);
@@ -156,14 +150,14 @@ const History = () => {
     fetchData();
   }, []);
 
-  const formattedChartData = consumption?.last_30_days.map(d => ({
+  const formattedChartData = history.map(d => ({
     ...d,
-    date: new Date(d.date).toLocaleDateString('pt-BR', { 
-      day: '2-digit', 
-      month: 'long',
-      year: 'numeric'
-    })
-  })) || [];
+    // Formata a data para exibição no gráfico
+    date: new Date(d.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    kwh: Number(d.kwh)
+  }));
+
+  if (isLoading) return <LoadingState>Carregando histórico...</LoadingState>;
 
   return (
     <HistoryWrapper>
@@ -171,95 +165,41 @@ const History = () => {
         <h1>Histórico de Consumo</h1>
         <p>Análise detalhada do seu consumo de energia ao longo do tempo</p>
       </Header>
-
       <Card>
-        <CardTitle>
-          <TrendingUp />
-          Evolução do Consumo (Últimos 30 dias)
-        </CardTitle>
-        
-        {isLoading ? (
-          <LoadingState>Carregando dados...</LoadingState>
-        ) : (
-          <ChartContainer>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={formattedChartData}>
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  vertical={false} 
-                  stroke={theme.borderColor} 
-                />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fill: theme.textSecondary }} 
-                  axisLine={{ stroke: theme.borderColor }} 
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                />
-                <YAxis 
-                  unit=" kWh" 
-                  tick={{ fill: theme.textSecondary }} 
-                  axisLine={{ stroke: theme.borderColor }} 
-                  tickLine={false}
-                />
-                <Tooltip
-                  cursor={{ stroke: theme.primary, strokeWidth: 2 }}
-                  contentStyle={{
-                    backgroundColor: theme.cardBg,
-                    borderColor: theme.borderColor,
-                    borderRadius: '12px',
-                    padding: '1rem'
-                  }}
-                  labelFormatter={(value) => `Data: ${value}`}
-                  formatter={(value) => [`Consumo: ${value} kWh`]}
-                />
-                <Legend 
-                  wrapperStyle={{
-                    paddingTop: '1rem'
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="kwh"
-                  stroke={theme.primary}
-                  strokeWidth={3}
-                  dot={{ r: 6 }}
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        )}
+        <CardTitle><TrendingUp /> Evolução do Consumo (Últimos 30 dias)</CardTitle>
+        <ChartContainer>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={formattedChartData}>
+              {/* Configs do Gráfico */}
+              <XAxis dataKey="date" />
+              <YAxis unit=" kWh" />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="kwh" name="Consumo (kWh)" stroke={theme.primary} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartContainer>
       </Card>
-
       <Card>
-        <CardTitle>
-          <Calendar />
-          Detalhes do Consumo Diário
-        </CardTitle>
-        
-        {isLoading ? (
-          <LoadingState>Carregando dados...</LoadingState>
-        ) : (
-          <Table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Consumo (kWh)</th>
-                <th>Custo Estimado</th>
+        <CardTitle><Calendar /> Detalhes do Consumo Diário</CardTitle>
+        <Table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Consumo (kWh)</th>
+              <th>Custo Estimado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {history.slice().reverse().map(item => (
+              <tr key={item.date}>
+                <td>{new Date(item.date).toLocaleDateString('pt-BR')}</td>
+                <td>{Number(item.kwh).toFixed(2)}</td>
+                <td>R$ {(Number(item.kwh) * (config?.kwh_cost || 0)).toFixed(2)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {consumption?.last_30_days.slice().reverse().map(item => (
-                <tr key={item.date}>
-                  <td>{new Date(item.date).toLocaleDateString('pt-BR')}</td>
-                  <td>{item.kwh.toFixed(2)}</td>
-                  <td>R$ {(item.kwh * (config?.kwh_cost || 0)).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
+            ))}
+          </tbody>
+        </Table>
       </Card>
     </HistoryWrapper>
   );

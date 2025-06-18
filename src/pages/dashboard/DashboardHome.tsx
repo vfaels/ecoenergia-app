@@ -210,9 +210,10 @@ const DashboardHome = () => {
   }, [user]);
 
   const formattedChartData = consumption?.last_7_days.map(d => ({
-    ...d,
-    consumo: Number(d.consumo)
-  })) || [];
+  ...d,
+  day: new Date(d.date).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
+  consumo: Number(d.consumo)
+})) || [];
 
   if (isLoading) {
     return <LoadingState>Carregando dados do dashboard...</LoadingState>;
