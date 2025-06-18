@@ -16,7 +16,7 @@ const residenceRoutes = require('./src/routes/residence.routes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/tips', tipRoutes);
-app.use('/api/residences', residenceRoutes);
+app.use('/api/residence', residenceRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor da API rodando na porta ${PORT}`);
