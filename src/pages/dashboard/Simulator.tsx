@@ -1,355 +1,299 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { PlusCircle, Trash2, TrendingUp } from 'lucide-react';
+import { 
+  Calculator, Zap, Calendar, DollarSign, CheckSquare, Square, 
+  Tv, Refrigerator, Laptop, Bed, WashingMachine, HelpCircle 
+} from 'lucide-react';
+import api from '../../services/api';
 
-// --- Tipagem para cada item do simulador ---
-interface ApplianceItem {
+// --- Tipagens ---
+interface Appliance {
   id: number;
   name: string;
-  power: number; // em Watts
-  hoursPerDay: number;
-  daysPerMonth: number;
+  power_watts: number;
+  category: string;
 }
 
-// --- Lista de aparelhos pré-definidos para o usuário escolher ---
-const predefinedAppliances = [
-  { name: 'Ar Condicionado (12.000 BTUs)', power: 1500 },
-  { name: 'Chuveiro Elétrico', power: 5500 },
-  { name: 'Geladeira (Duplex)', power: 150 },
-  { name: 'Lâmpada LED (10W)', power: 10 },
-  { name: 'Micro-ondas', power: 1200 },
-  { name: 'Televisão (LED 42")', power: 120 },
-  { name: 'Computador (Desktop)', power: 300 },
-  { name: 'Notebook', power: 60 },
-  { name: 'Máquina de Lavar', power: 500 },
-];
+interface SimulationInput {
+  hoursPerDay: number;
+  daysPerWeek: number;
+}
 
-const KWH_PRICE = 0.85;
+type SimulationState = Record<string, SimulationInput>;
 
-// --- COMPONENTES ESTILIZADOS ---
+// --- Estilização ---
 const SimulatorWrapper = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
+  animation: fadeIn 0.5s ease-in-out;
 `;
 
 const Header = styled.header`
   margin-bottom: 2.5rem;
-  h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: ${({ theme }) => theme.text};
-    margin-bottom: 0.5rem;
-  }
-  p {
-    font-size: 1.2rem;
-    color: ${({ theme }) => theme.textSecondary};
-    opacity: 0.9;
+  h1 { font-size: 2.5rem; font-weight: 800; color: ${({ theme }) => theme.text}; }
+  p { font-size: 1.2rem; color: ${({ theme }) => theme.textSecondary}; }
+`;
+
+const MainGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  align-items: flex-start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
   }
 `;
 
 const Card = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
+  border: 1px solid ${({ theme }) => theme.borderColor};
   border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  position: relative;
-  overflow: hidden;
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: ${({ theme }) => theme.primary};
-    border-radius: 16px 16px 0 0;
-  }
-`;
-
-const AddApplianceForm = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  gap: 1.5rem;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background-color: ${({ theme }) => theme.bodySecondary};
-  border-radius: 12px;
-`;
-
-const InputGroup = styled.div`
-  label {
-    display: block;
-    font-weight: 500;
-    color: ${({ theme }) => theme.textSecondary};
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-  }
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 0.8rem 1rem;
-  border: 1px solid ${({ theme }) => theme.borderColor};
-  background-color: ${({ theme }) => theme.body};
-  color: ${({ theme }) => theme.text};
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.primary};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}33;
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 0.8rem 1rem;
-  border: 1px solid ${({ theme }) => theme.borderColor};
-  background-color: ${({ theme }) => theme.body};
-  color: ${({ theme }) => theme.text};
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.primary};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}33;
-  }
-`;
-
-const AddButton = styled.button`
-  background-color: ${({ theme }) => theme.primary};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.8rem;
-  cursor: pointer;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease;
-  font-weight: 600;
-  
-  &:hover {
-    background-color: ${({ theme }) => theme.primaryHover};
-    transform: translateY(-1px);
-  }
-`;
-
-const ApplianceList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const ApplianceRow = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem;
-  border-radius: 12px;
-  background-color: ${({ theme }) => theme.bodySecondary};
-  transition: all 0.2s ease;
-  
-`;
-
-const RemoveButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: ${({ theme }) => theme.text};
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    color: #dc2626;
-    background-color: rgba(220, 38, 38, 0.1);
-  }
-`;
-
-const ResultsCard = styled.div`
-  margin-top: 2rem;
   padding: 2rem;
-  background-color: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.borderColor};
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
-  color: ${({ theme }) => theme.text};
-  
-  &:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
 `;
 
-const ResultsHeader = styled.h3`
+const CardTitle = styled.h3`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  color: ${({ theme }) => theme.text};
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid ${({ theme }) => theme.borderColor};
 `;
 
-const ResultsSubtitle = styled.p`
-  font-size: 1rem;
-  margin: 0;
-  color: ${({ theme }) => theme.textSecondary};
+const ApplianceSelectionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
-const ResultItem = styled.p`
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0.5rem 0;
-  span {
-    font-weight: 400;
-    color: ${({ theme }) => theme.textSecondary};
+const ApplianceRow = styled.div<{ isSelected: boolean }>`
+  background-color: ${({ isSelected, theme }) => isSelected ? theme.bodySecondary : 'transparent'};
+  border: 1px solid ${({ isSelected, theme }) => isSelected ? theme.primary : theme.borderColor};
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 1.5rem;
+  align-items: center;
+  transition: all 0.2s ease-in-out;
+`;
+
+const ApplianceDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  
+  strong { 
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; 
+    font-size: 1.1rem; 
+    color: ${({ theme }) => theme.text}; 
+  }
+  
+  span { 
+    font-size: 0.9rem; 
+    color: ${({ theme }) => theme.textSecondary}; 
+    margin-top: 0.25rem;
   }
 `;
 
+const Checkbox = styled.div`
+  cursor: pointer;
+  color: ${({ theme }) => theme.primary};
+`;
+
+const UsageInputs = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+
+  input {
+    width: 70px;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid ${({ theme }) => theme.borderColor};
+    background-color: ${({ theme }) => theme.body};
+    color: ${({ theme }) => theme.text};
+    text-align: center;
+  }
+`;
+
+const ResultsCard = styled(Card)`
+  position: sticky;
+  top: 90px; /* Altura da Topbar + um pouco de espaço */
+`;
+
+const ResultItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  
+  & + & {
+    margin-top: 1.5rem;
+  }
+
+  svg { color: ${({ theme }) => theme.primary}; flex-shrink: 0; }
+  
+  div {
+    strong { font-size: 1.5rem; color: ${({ theme }) => theme.text}; display: block; }
+    span { color: ${({ theme }) => theme.textSecondary}; }
+  }
+`;
+
+const getCategoryIcon = (category: string) => {
+  switch (category.toLowerCase()) {
+    case 'cozinha':
+      return <Refrigerator size={18} />;
+    case 'sala':
+      return <Tv size={18} />;
+    case 'quarto':
+      return <Bed size={18} />;
+    case 'lavanderia':
+      return <WashingMachine size={18} />;
+    case 'escritório':
+      return <Laptop size={18} />;
+    default:
+      return <HelpCircle size={18} />;
+  }
+};
+
+// --- Componente Principal ---
 const Simulator = () => {
-  const [appliances, setAppliances] = useState<ApplianceItem[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [hours, setHours] = useState('1');
-  const [days, setDays] = useState('30');
+  const [allAppliances, setAllAppliances] = useState<Appliance[]>([]);
+  const [simulationInputs, setSimulationInputs] = useState<SimulationState>({});
+  const [kwhCost, setKwhCost] = useState(0.75);
 
-  const handleAddAppliance = () => {
-    const selectedApplianceData = predefinedAppliances[selectedIndex];
-    const hoursNum = parseFloat(hours);
-    const daysNum = parseFloat(days);
-    if (!selectedApplianceData || !hoursNum || hoursNum <= 0 || !daysNum || daysNum <= 0) return;
-    
-    const newAppliance: ApplianceItem = {
-      id: Date.now(),
-      name: selectedApplianceData.name,
-      power: selectedApplianceData.power,
-      hoursPerDay: hoursNum,
-      daysPerMonth: daysNum,
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [appliancesRes, residenceRes] = await Promise.all([
+          api.get('/appliances'),
+          api.get('/residence/me')
+        ]);
+        const flatList = Object.values(appliancesRes.data).flat() as Appliance[];
+        setAllAppliances(flatList);
+        if (residenceRes.data.kwh_cost) {
+          setKwhCost(residenceRes.data.kwh_cost);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados para o simulador:", error);
+      }
     };
-    setAppliances([...appliances, newAppliance]);
-  };
+    fetchData();
+  }, []);
 
-  const handleRemoveAppliance = (id: number) => {
-    setAppliances(appliances.filter(app => app.id !== id));
-  };
-
-  const totalMonthlyKwh = useMemo(() => {
-    return appliances.reduce((total, item) => {
-      const consumptionKwh = (item.power * item.hoursPerDay * item.daysPerMonth) / 1000;
-      return total + consumptionKwh;
-    }, 0);
-  }, [appliances]);
-
-  const estimatedCost = useMemo(() => {
-    const cost = totalMonthlyKwh * KWH_PRICE;
-    return cost.toLocaleString('pt-BR', { 
-      style: 'currency', 
-      currency: 'BRL' 
+  const handleSelectionChange = (applianceId: number) => {
+    setSimulationInputs(prev => {
+      const newInputs = { ...prev };
+      if (newInputs[applianceId]) {
+        delete newInputs[applianceId]; // Desseleciona
+      } else {
+        newInputs[applianceId] = { hoursPerDay: 1, daysPerWeek: 7 }; // Seleciona com valores padrão
+      }
+      return newInputs;
     });
-  }, [totalMonthlyKwh]);
+  };
+
+  const handleInputChange = (applianceId: number, field: keyof SimulationInput, value: string) => {
+    const numValue = parseInt(value, 10) || 0;
+    setSimulationInputs(prev => ({
+      ...prev,
+      [applianceId]: {
+        ...prev[applianceId],
+        [field]: numValue
+      }
+    }));
+  };
+
+  const simulationResults = useMemo(() => {
+    let totalKwhPerMonth = 0;
+
+    for (const applianceId in simulationInputs) {
+      const appliance = allAppliances.find(a => a.id === parseInt(applianceId));
+      const inputs = simulationInputs[applianceId];
+
+      if (appliance && inputs) {
+        const kwhPerDay = (appliance.power_watts * inputs.hoursPerDay) / 1000;
+        const kwhPerWeek = kwhPerDay * inputs.daysPerWeek;
+        const kwhPerMonth = kwhPerWeek * 4.345; // Média de semanas em um mês
+        totalKwhPerMonth += kwhPerMonth;
+      }
+    }
+
+    return {
+      dailyKwh: totalKwhPerMonth / 30.4,
+      weeklyKwh: totalKwhPerMonth / 4.345,
+      monthlyKwh: totalKwhPerMonth,
+      monthlyCost: totalKwhPerMonth * kwhCost,
+    };
+  }, [simulationInputs, allAppliances, kwhCost]);
 
   return (
     <SimulatorWrapper>
       <Header>
         <h1>Simulador de Consumo</h1>
-        <p>Adicione eletrodomésticos para estimar o seu consumo mensal.</p>
+        <p>Selecione seus aparelhos e informe o tempo de uso para uma estimativa de gastos.</p>
       </Header>
-
-      <Card>
-        <AddApplianceForm>
-          <InputGroup>
-            <label htmlFor="appliance">Eletrodoméstico</label>
-            <Select 
-              id="appliance" 
-              value={selectedIndex} 
-              onChange={(e) => setSelectedIndex(parseInt(e.target.value))}
-            >
-              {predefinedAppliances.map((app, index) => (
-                <option key={index} value={index}>{app.name}</option>
-              ))}
-            </Select>
-          </InputGroup>
-          
-          <InputGroup>
-            <label htmlFor="hours">Horas de uso/dia</label>
-            <Input 
-              id="hours" 
-              type="number" 
-              min="0" 
-              value={hours} 
-              onChange={(e) => setHours(e.target.value)}
-            />
-          </InputGroup>
-          
-          <InputGroup>
-            <label htmlFor="days">Dias de uso/mês</label>
-            <Input 
-              id="days" 
-              type="number" 
-              min="0" 
-              max="31" 
-              value={days} 
-              onChange={(e) => setDays(e.target.value)}
-            />
-          </InputGroup>
-          
-          <AddButton onClick={handleAddAppliance} title="Adicionar aparelho">
-            <PlusCircle size={20} />
-          </AddButton>
-        </AddApplianceForm>
-
-        <ApplianceList>
-          {appliances.map(app => (
-            <ApplianceRow key={app.id}>
-              <span>{app.name}</span>
-              <span>{app.power} W</span>
-              <span>{app.hoursPerDay}h/dia</span>
-              <span>{app.daysPerMonth} dias/mês</span>
-              <RemoveButton onClick={() => handleRemoveAppliance(app.id)} title="Remover aparelho">
-                <Trash2 size={18} />
-              </RemoveButton>
-            </ApplianceRow>
-          ))}
-        </ApplianceList>
-      </Card>
-
-      {appliances.length > 0 && (
+      <MainGrid>
+        <Card>
+          <CardTitle>Selecione os Aparelhos</CardTitle>
+          <ApplianceSelectionList>
+            {allAppliances.map(appliance => {
+              const isSelected = !!simulationInputs[appliance.id];
+              return (
+                <ApplianceRow key={appliance.id} isSelected={isSelected}>
+                  <Checkbox onClick={() => handleSelectionChange(appliance.id)}>
+                    {isSelected ? <CheckSquare size={24}/> : <Square size={24}/>}
+                  </Checkbox>
+                  <ApplianceDetails>
+                    <strong>
+                      {getCategoryIcon(appliance.category)}
+                      {appliance.name}
+                    </strong>
+                    <span>{appliance.power_watts} W</span>
+                  </ApplianceDetails>
+                  {isSelected && (
+                    <UsageInputs>
+                      <input type="number" min="0" max="24" value={simulationInputs[appliance.id].hoursPerDay} onChange={e => handleInputChange(appliance.id, 'hoursPerDay', e.target.value)} />
+                      <label>horas/dia</label>
+                      <input type="number" min="0" max="7" value={simulationInputs[appliance.id].daysPerWeek} onChange={e => handleInputChange(appliance.id, 'daysPerWeek', e.target.value)} />
+                      <label>dias/sem</label>
+                    </UsageInputs>
+                  )}
+                </ApplianceRow>
+              )
+            })}
+          </ApplianceSelectionList>
+        </Card>
+        
         <ResultsCard>
-          <ResultsHeader>
-            <TrendingUp size={28} />
-            Resultado da Simulação
-          </ResultsHeader>
-          <ResultsSubtitle>
-            O consumo mensal estimado para os aparelhos listados é de:
-          </ResultsSubtitle>
-          <div>
-            <ResultItem>
-              Consumo: <span>{totalMonthlyKwh.toFixed(2)} kWh/mês</span>
-            </ResultItem>
-            <ResultItem>
-              Custo Estimado: <span>{estimatedCost}</span>
-            </ResultItem>
-          </div>
+          <CardTitle><Calculator/> Resultado da Simulação</CardTitle>
+          <ResultItem>
+            <Zap size={24}/>
+            <div>
+              <strong>{simulationResults.dailyKwh.toFixed(2)} kWh</strong>
+              <span>Consumo Diário Estimado</span>
+            </div>
+          </ResultItem>
+          <ResultItem>
+            <Calendar size={24}/>
+            <div>
+              <strong>{simulationResults.weeklyKwh.toFixed(2)} kWh</strong>
+              <span>Consumo Semanal Estimado</span>
+            </div>
+          </ResultItem>
+          <ResultItem>
+            <DollarSign size={24}/>
+            <div>
+              <strong>R$ {simulationResults.monthlyCost.toFixed(2)}</strong>
+              <span>Custo Mensal Estimado</span>
+            </div>
+          </ResultItem>
         </ResultsCard>
-      )}
+      </MainGrid>
     </SimulatorWrapper>
   );
 };

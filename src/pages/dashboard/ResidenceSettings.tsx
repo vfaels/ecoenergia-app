@@ -1,8 +1,13 @@
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import styled from 'styled-components';
-import { Trash2, PlusCircle, Zap, HelpCircle, Sticker, BookOpen, Search, Edit, X } from 'lucide-react';
+import { Home, Zap, Edit, PlusCircle, HelpCircle, Sticker, BookOpen, Search, Trash2, X, Settings } from 'lucide-react';
 import api from '../../services/api';
 
+interface Residence {
+    residents: number;
+    rooms: number;
+    kwh_cost: number;
+}
 interface Appliance {
   id: number;
   name: string;
@@ -28,6 +33,33 @@ const Header = styled.header`
   }
 `;
 
+const TabsContainer = styled.div`
+  display: flex;
+  border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+  margin-bottom: 2rem;
+`;
+
+const TabButton = styled.button<{ isActive: boolean }>`
+  padding: 1rem 1.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: ${({ theme, isActive }) => isActive ? theme.primary : theme.textSecondary};
+  border-bottom: 3px solid ${({ isActive, theme }) => isActive ? theme.primary : 'transparent'};
+  margin-bottom: -1px; /* Alinha a borda com a borda do contêiner */
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+
+const TabContent = styled.div`
+  animation: fadeIn 0.3s ease-in-out;
+`;
+
 const CategoryHeader = styled.h4`
     font-size: 1rem;
     font-weight: 600;
@@ -42,13 +74,9 @@ const CategoryHeader = styled.h4`
 
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 2rem;
   align-items: flex-start;
-
-  @media (max-width: 992px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 const Card = styled.div`
@@ -60,7 +88,7 @@ const Card = styled.div`
 `;
 
 const ListCard = styled(Card)`
-  min-width: 600px;
+  min-width: 750px;
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -73,7 +101,7 @@ const ListCard = styled(Card)`
 const CardTitle = styled.h3`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   font-size: 1.5rem;
   font-weight: 700;
   color: ${({ theme }) => theme.text};
@@ -136,7 +164,7 @@ const Button = styled.button`
 const ApplianceList = styled.ul`
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0;  
 `;
 
 const ApplianceItem = styled.li`
@@ -196,6 +224,12 @@ const TipItem = styled.li`
   gap: 0.75rem;
   font-size: 0.95rem;
   color: ${({ theme }) => theme.textSecondary};
+  background-color: ${({ theme }) => theme.bodySecondary};
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: color 0.2s ease;
   line-height: 1.5;
 
   svg {
@@ -305,63 +339,103 @@ const Select = styled.select`
   font-size: 1rem;
 `;
 
+const SummaryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+`;
+
+const SummaryItem = styled.div`
+  background-color: ${({ theme }) => theme.body};
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  
+  span {
+    display: block;
+    color: ${({ theme }) => theme.textSecondary};
+    margin-bottom: 0.5rem;
+  }
+
+  strong {
+    font-size: 2rem;
+    font-weight: 700;
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+
 
 // --- Componente Principal ---
 export const ResidenceSettings = () => {
+  const [activeTab, setActiveTab] = useState('geral');
   const [allAppliances, setAllAppliances] = useState<Appliance[]>([]);
+  const [residence, setResidence] = useState<Residence>({ residents: 0, rooms: 0, kwh_cost: 0 });
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setSelectedCategory('Todos');
-  };
-
+  
   const [name, setName] = useState('');
   const [power, setPower] = useState('');
   const [category, setCategory] = useState('Outros');
   
   const [editingAppliance, setEditingAppliance] = useState<Appliance | null>(null);
 
-  const applianceCategories = ['Cozinha', 'Sala', 'Quarto', 'Lavanderia', 'Escritório', 'Outros'];
+  const applianceCategories = ['Todos', 'Cozinha', 'Sala', 'Quarto', 'Lavanderia', 'Escritório', 'Outros'];
 
-  const fetchAppliances = async () => {
+  const fetchData = async () => {
     try {
-      const response = await api.get('/appliances');
-      const groupedData: GroupedAppliances = response.data;
+      const [appliancesRes, residenceRes] = await Promise.all([
+        api.get('/appliances'),
+        api.get('/residence/me')
+      ]);
+      
+      const groupedData: GroupedAppliances = appliancesRes.data;
       const flatList = Object.values(groupedData).flat();
       setAllAppliances(flatList);
-    } catch (error) { console.error("Erro ao buscar aparelhos:", error); }
+      setResidence(residenceRes.data);
+    } catch (error) {
+      console.error("Erro ao buscar dados da página:", error);
+    }
   };
 
-  useEffect(() => { fetchAppliances(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const filteredAndGroupedAppliances = useMemo(() => {
     const filtered = allAppliances
-      .filter(appliance => {
-        return selectedCategory === 'Todos' || appliance.category === selectedCategory;
-      })
-      .filter(appliance => {
-        return appliance.name.toLowerCase().includes(searchTerm.toLowerCase());
-      });
+      .filter(appliance => selectedCategory === 'Todos' || appliance.category === selectedCategory)
+      .filter(appliance => appliance.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return filtered.reduce<GroupedAppliances>((acc, current) => {
       const category = current.category;
-      if (!acc[category]) {
-        acc[category] = [];
-      }
+      if (!acc[category]) acc[category] = [];
       acc[category].push(current);
       return acc;
     }, {});
   }, [allAppliances, searchTerm, selectedCategory]);
 
-  const clearForm = () => {
-    setName('');
-    setPower('');
-    setCategory('Outros');
-    setEditingAppliance(null);
+  const handleResidenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setResidence(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+  };
+  
+  const handleUpdateResidence = async (event: FormEvent) => {
+    event.preventDefault();
+    try {
+      await api.put('/residence/me', residence);
+      alert('Configurações da residência salvas com sucesso!');
+      fetchData();
+    } catch (error) {
+      console.error("Erro ao salvar configurações da residência:", error);
+      alert("Não foi possível salvar as alterações.");
+    }
   };
 
+  const clearForm = () => {
+    setName(''); setPower(''); setCategory('Outros'); setEditingAppliance(null);
+  };
+  
   const handleStartEdit = (appliance: Appliance) => {
     setEditingAppliance(appliance);
     setName(appliance.name);
@@ -369,27 +443,23 @@ export const ResidenceSettings = () => {
     setCategory(appliance.category);
   };
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleApplianceSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!name || !power || !category) { return alert('Por favor, preencha todos os campos.'); }
+    if (!name || !power || !category) return alert('Por favor, preencha todos os campos.');
 
-    const applianceData = {
-        name,
-        power_watts: parseInt(power, 10),
-        category
-    };
+    const applianceData = { name, power_watts: parseInt(power, 10), category };
 
     try {
-        if (editingAppliance) {
-            await api.put(`/appliances/${editingAppliance.id}`, applianceData);
-        } else {
-            await api.post('/appliances', applianceData);
-        }
-        clearForm();
-        fetchAppliances();
+      if (editingAppliance) {
+        await api.put(`/appliances/${editingAppliance.id}`, applianceData);
+      } else {
+        await api.post('/appliances', applianceData);
+      }
+      clearForm();
+      fetchData();
     } catch (error) {
-        console.error("Erro ao salvar aparelho:", error);
-        alert('Não foi possível salvar o aparelho.');
+      console.error("Erro ao salvar aparelho:", error);
+      alert('Não foi possível salvar o aparelho.');
     }
   };
 
@@ -397,22 +467,79 @@ export const ResidenceSettings = () => {
     if (window.confirm('Tem certeza que deseja excluir este aparelho?')) {
       try {
         await api.delete(`/appliances/${id}`);
-        fetchAppliances();
+        fetchData();
       } catch (error) { console.error("Erro ao deletar aparelho:", error); }
     }
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('Todos');
   };
 
   return (
     <SettingsWrapper>
       <Header>
         <h1>Configurar Residência</h1>
-        <p>Adicione, edite ou remova os eletrodomésticos da sua casa.</p>
+        <p>Gerencie as informações da sua casa e seus aparelhos.</p>
       </Header>
-      <ContentGrid>
-        <aside>
-          <Card as="section">
+      <TabsContainer>
+        <TabButton isActive={activeTab === 'geral'} onClick={() => setActiveTab('geral')}>Visão Geral</TabButton>
+        <TabButton isActive={activeTab === 'configuracoes'} onClick={() => setActiveTab('configuracoes')}>Configurações</TabButton>
+        <TabButton isActive={activeTab === 'aparelhos'} onClick={() => setActiveTab('aparelhos')}>Aparelhos</TabButton>
+      </TabsContainer>
+      <TabContent>
+
+        {activeTab === 'geral' && (
+          <Card>
+            <CardTitle><Home /> Resumo da Residência</CardTitle>
+            <SummaryGrid>
+              <SummaryItem>
+                <span>Moradores</span>
+                <strong>{residence.residents}</strong>
+              </SummaryItem>
+              <SummaryItem>
+                <span>Cômodos</span>
+                <strong>{residence.rooms}</strong>
+              </SummaryItem>
+              <SummaryItem>
+                <span>Custo do kWh</span>
+                <strong>R$ {Number(residence.kwh_cost).toFixed(4)}</strong>
+              </SummaryItem>
+              <SummaryItem>
+                <span>Aparelhos Cadastrados</span>
+                <strong>{allAppliances.length}</strong>
+              </SummaryItem>
+            </SummaryGrid>
+          </Card>
+        )}
+
+        {activeTab === 'configuracoes' && (
+          <Card>
+            <CardTitle><Settings />Configurações Gerais</CardTitle>
+            <Form onSubmit={handleUpdateResidence}>
+                <FormGroup>
+                    <Label htmlFor="residents">Moradores</Label>
+                    <Input id="residents" name="residents" type="number" value={residence.residents} onChange={handleResidenceChange} />
+                </FormGroup>
+                <FormGroup>
+                    <Label htmlFor="rooms">Cômodos</Label>
+                    <Input id="rooms" name="rooms" type="number" value={residence.rooms} onChange={handleResidenceChange} />
+                </FormGroup>
+                <FormGroup>
+                    <Label htmlFor="kwh_cost">Custo por kWh (R$)</Label>
+                    <Input id="kwh_cost" name="kwh_cost" type="number" step="0.01" value={residence.kwh_cost} onChange={handleResidenceChange} />
+                </FormGroup>
+                <Button type="submit">Salvar Configurações</Button>
+            </Form>
+          </Card>
+        )}
+        {activeTab === 'aparelhos' && (
+          <ContentGrid>
+            <aside>
+              <Card as="section">
             <CardTitle>{editingAppliance ? <Edit /> : <PlusCircle />} {editingAppliance ? 'Editar Aparelho' : 'Adicionar Aparelho'}</CardTitle>
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={handleApplianceSubmit}>
               <FormGroup>
                 <Label htmlFor="name">Nome do Aparelho</Label>
                 <Input id="name" type="text" placeholder="Ex: Geladeira" value={name} onChange={e => setName(e.target.value)} />
@@ -433,8 +560,7 @@ export const ResidenceSettings = () => {
               )}
             </Form>
           </Card>
-          
-          <Card as="section" style={{ marginTop: '2rem' }}>
+              <Card as="section" style={{ marginTop: '2rem' }}>
             <CardTitle><HelpCircle />Como Encontrar os Watts?</CardTitle>
             <TipsList>
               <TipItem><Sticker size={18} />Procure por uma etiqueta no próprio aparelho (geralmente na parte de trás ou embaixo).</TipItem>
@@ -442,9 +568,8 @@ export const ResidenceSettings = () => {
               <TipItem><Search size={18} />Pesquise online pelo modelo do seu aparelho + a palavra "potência" ou "watts".</TipItem>
             </TipsList>
           </Card>
-        </aside>
-
-        <ListCard as="main">
+            </aside>
+            <ListCard as="main">
           <CardTitle><Zap />Meus Aparelhos</CardTitle>
           <FilterBar>
             <SearchInput>
@@ -499,6 +624,10 @@ export const ResidenceSettings = () => {
             )}
         </ListCard>
       </ContentGrid>
+        )}
+
+      </TabContent>
     </SettingsWrapper>
   );
-}
+};
+export default ResidenceSettings;
