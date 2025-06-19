@@ -2,31 +2,32 @@ const db = require('../config/database');
 
 exports.getConsumptionSummary = async (req, res) => {
   const userId = req.userId;
-
   try {
-    const todayResult = await db.query(
-      'SELECT consumption_kwh FROM consumption_history WHERE user_id = $1 AND record_date = CURRENT_DATE',
-      [userId]
-    );
-    const today_kwh = todayResult.rows.length > 0 ? todayResult.rows[0].consumption_kwh : 0;
-
-    const last7DaysResult = await db.query(
-      `SELECT 
-         record_date as date,
-         consumption_kwh as consumo 
+    const monthResult = await db.query(
+      `SELECT SUM(consumption_kwh) as current_month_kwh
        FROM consumption_history 
-       WHERE user_id = $1 AND record_date >= CURRENT_DATE - INTERVAL '6 days' 
-       ORDER BY record_date ASC`,
+       WHERE user_id = $1 
+       AND EXTRACT(MONTH FROM record_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+       AND EXTRACT(YEAR FROM record_date) = EXTRACT(YEAR FROM CURRENT_DATE)`,
       [userId]
     );
+    const comparisonResult = await db.query(
+      `SELECT 
+         EXTRACT(MONTH FROM record_date) as month, 
+         SUM(consumption_kwh) as total_kwh
+       FROM consumption_history
+       WHERE user_id = $1 AND record_date >= CURRENT_DATE - INTERVAL '3 months'
+       GROUP BY EXTRACT(MONTH FROM record_date)
+       ORDER BY month DESC`,
+       [userId]
+    );
 
-    const response = {
-      today_kwh: parseFloat(today_kwh),
-      last_7_days: last7DaysResult.rows,
+    const summary = {
+      current_month_kwh: parseFloat(monthResult.rows[0].current_month_kwh || 0),
+      monthly_comparison: comparisonResult.rows
     };
 
-    res.status(200).send(response);
-
+    res.status(200).send(summary);
   } catch (error) {
     console.error('Erro ao buscar resumo de consumo:', error);
     res.status(500).send({ message: 'Erro interno do servidor.' });

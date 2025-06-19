@@ -82,6 +82,7 @@ const ContentGrid = styled.div`
 const Card = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
+  max-width: 100%;
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -117,6 +118,8 @@ const CardTitle = styled.h3`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
 `;
 
 const FormGroup = styled.div`
@@ -149,9 +152,8 @@ const Button = styled.button`
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 1rem;
+  align-items: left;
   gap: 0.5rem;
   transition: background-color 0.2s;
   margin-top: 1rem;
@@ -365,7 +367,6 @@ const SummaryItem = styled.div`
 `;
 
 
-// --- Componente Principal ---
 export const ResidenceSettings = () => {
   const [activeTab, setActiveTab] = useState('geral');
   const [allAppliances, setAllAppliances] = useState<Appliance[]>([]);

@@ -65,8 +65,8 @@ export const Sidebar = () => {
     { to: '/app', icon: <LayoutDashboard />, label: 'Painel de Controle' },
     { to: '/app/historico', icon: <BarChart3 />, label: 'Histórico' },
     { to: '/app/simulador', icon: <Bot />, label: 'Simulador' },
-    { to: '/app/residencia', icon: <Wrench />, label: 'Configurar Residência' },
-    { to: '/app/dicas', icon: <Lightbulb />, label: 'Dicas de Economia' },
+    { to: '/app/residencia', icon: <Wrench />, label: 'Residência' },
+    { to: '/app/dicas', icon: <Lightbulb />, label: 'Dicas' },
   ];
 
   return (
