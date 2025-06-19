@@ -1,41 +1,18 @@
-import { useEffect } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import styled from 'styled-components';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Toaster, toast } from 'react-hot-toast';
-import { Home, Users, CheckCircle, Pencil, Building, DollarSign } from 'lucide-react';
+import { Trash2, PlusCircle, Zap, HelpCircle, Sticker, BookOpen, Search, Edit, X } from 'lucide-react';
 import api from '../../services/api';
 
-// --- Esquema de Validação com Zod ---
-const settingsSchema = z.object({
-  name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-  type: z.enum(['Casa', 'Apartamento'], { required_error: 'Selecione um tipo de residência.' }),
-  residents: z.number().min(1, 'Deve haver pelo menos 1 morador.').positive(),
-  rooms: z.number().min(1, 'Deve haver pelo menos 1 cômodo.').positive(),
-  kwh_cost: z.number().positive('O custo deve ser um número positivo.'),
-});
+interface Appliance {
+  id: number;
+  name: string;
+  power_watts: number;
+  category: string;
+}
+type GroupedAppliances = Record<string, Appliance[]>;
 
-// Tipagem inferida do esquema Zod
-type SettingsFormData = z.infer<typeof settingsSchema>;
-
-// --- COMPONENTES ESTILIZADOS ---
 const SettingsWrapper = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2.5rem;
-  align-items: flex-start;
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  
-  @media (max-width: 992px) {
-    grid-template-columns: 1fr;
-    padding: 1rem;
-  }
-`;
-
-const FormContainer = styled.div`
+  animation: fadeIn 0.5s ease-in-out;
 `;
 
 const Header = styled.header`
@@ -44,102 +21,86 @@ const Header = styled.header`
     font-size: 2.5rem;
     font-weight: 800;
     color: ${({ theme }) => theme.text};
-    margin-bottom: 0.5rem;
   }
   p {
     font-size: 1.2rem;
     color: ${({ theme }) => theme.textSecondary};
-    opacity: 0.9;
   }
 `;
 
-const FormCard = styled.form`
-  background-color: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.borderColor};
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: ${({ theme }) => theme.primary};
-    border-radius: 16px 16px 0 0;
-  }
-`;
-
-const InfoPanel = styled.div`
-  background-color: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.borderColor};
-  border-radius: 16px;
-  padding: 2rem;
-  position: sticky;
-  top: 170px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
-  color: ${({ theme }) => theme.text};
-  
-  h4 {
-    font-size: 1.2rem;
-    color: ${({ theme }) => theme.text};
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-  
-  ul {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    color: ${({ theme }) => theme.textSecondary};
-    font-size: 0.9rem;
-    line-height: 1.5;
-    padding: 0.75rem;
-    border-radius: 8px;
-    transition: background-color 0.2s;
-    
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-    
-    svg {
-      color: ${({ theme }) => theme.primary};
-      width: 18px;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-  }
-`;
-
-const InputGroup = styled.div`
-  margin-bottom: 1.5rem;
-  label {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.75rem;
+const CategoryHeader = styled.h4`
+    font-size: 1rem;
     font-weight: 600;
-    color: ${({ theme }) => theme.text};
-    margin-bottom: 0.75rem;
-    svg {
-      color: ${({ theme }) => theme.primary};
-      margin-top: 2px;
-    }
+    color: ${({ theme }) => theme.textSecondary};
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+`;
+
+const ContentGrid = styled.div`
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 2rem;
+  align-items: flex-start;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
   }
+`;
+
+const Card = styled.div`
+  background-color: ${({ theme }) => theme.cardBg};
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+`;
+
+const ListCard = styled(Card)`
+  min-width: 600px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  
+  max-width: 900px;
+  justify-self: start;
+  
+`;
+
+const CardTitle = styled.h3`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+
+  svg {
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 1rem;
+`;
+
+const Label = styled.label`
+  display: block;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
 `;
 
 const Input = styled.input`
@@ -147,19 +108,190 @@ const Input = styled.input`
   padding: 0.8rem 1rem;
   border: 1px solid ${({ theme }) => theme.borderColor};
   background-color: ${({ theme }) => theme.body};
-  color: ${({ theme }) => theme.text};
   border-radius: 8px;
+  color: ${({ theme }) => theme.text};
   font-size: 1rem;
-  transition: all 0.2s ease;
+`;
+
+const Button = styled.button`
+  background-color: ${({ theme }) => theme.primary};
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.primaryHover};
+  }
+`;
+
+const ApplianceList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const ApplianceItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.bodySecondary};
+  }
+`;
+
+const ApplianceInfo = styled.div`
+  strong {
+    color: ${({ theme }) => theme.text};
+  }
+  div {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: ${({ theme }) => theme.textSecondary};
+    font-size: 0.9em;
+    margin-top: 0.25rem;
+  }
+`;
+
+const DeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.textSecondary};
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.cardBg};
+    color: #e53e3e;
+  }
+`;
+
+const TipsList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const TipItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  color: ${({ theme }) => theme.textSecondary};
+  line-height: 1.5;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 3px;
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 3rem 1rem;
+  color: ${({ theme }) => theme.textSecondary};
+  border: 2px dashed ${({ theme }) => theme.borderColor};
+  border-radius: 12px;
   
-  &:focus {
-    outline: none;
+  svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const EditButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.textSecondary};
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.cardBg};
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+
+const SecondaryButton = styled(Button)`
+  background-color: ${({ theme }) => theme.secondary};
+  margin-top: 0.5rem;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.secondaryHover};
+  }
+`;
+
+const FilterBar = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+const ClearFilterButton = styled.button`
+  background-color: transparent;
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  color: ${({ theme }) => theme.textSecondary};
+  padding: 0.8rem;
+  height: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
     border-color: ${({ theme }) => theme.primary};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}33;
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+
+const SearchInput = styled.div`
+  position: relative;
+  width: 100%;
+  
+  input {
+    padding-left: 2.5rem;
   }
   
-  &:hover {
-    border-color: ${({ theme }) => theme.primary}33;
+  svg {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: ${({ theme }) => theme.textSecondary};
   }
 `;
 
@@ -168,177 +300,205 @@ const Select = styled.select`
   padding: 0.8rem 1rem;
   border: 1px solid ${({ theme }) => theme.borderColor};
   background-color: ${({ theme }) => theme.body};
+  border-radius: 8px;
   color: ${({ theme }) => theme.text};
-  border-radius: 8px;
   font-size: 1rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.primary};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}33;
-  }
-  
-  &:hover {
-    border-color: ${({ theme }) => theme.primary}33;
-  }
 `;
 
-const ErrorMessage = styled.p`
-  color: #e53e3e;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-  padding-left: 2.25rem;
-`;
 
-const SubmitButton = styled.button`
-  background-color: ${({ theme }) => theme.primary};
-  color: white;
-  padding: 0.9rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  width: 100%;
-  margin-top: 1rem;
-  
-  &:hover {
-    background-color: ${({ theme }) => theme.primaryHover};
-    transform: translateY(-2px);
-  }
-  
-  &:disabled {
-    background-color: ${({ theme }) => theme.textSecondary};
-    cursor: not-allowed;
-  }
-`;
-
+// --- Componente Principal ---
 export const ResidenceSettings = () => {
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<SettingsFormData>({
-    resolver: zodResolver(settingsSchema),
-  });
+  const [allAppliances, setAllAppliances] = useState<Appliance[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const response = await api.get('/residence_config');
-        const data = response.data;
-        setValue('name', data.name);
-        setValue('type', data.type);
-        setValue('residents', data.residents);
-        setValue('rooms', data.rooms);
-        setValue('kwh_cost', data.kwh_cost);
-      } catch (error) {
-        console.error("Falha ao buscar configurações da residência:", error);
-      }
-    };
-    fetchSettings();
-  }, [setValue]);
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('Todos');
+  };
 
-  const onSubmit: SubmitHandler<SettingsFormData> = async (data) => {
+  const [name, setName] = useState('');
+  const [power, setPower] = useState('');
+  const [category, setCategory] = useState('Outros');
+  
+  const [editingAppliance, setEditingAppliance] = useState<Appliance | null>(null);
+
+  const applianceCategories = ['Cozinha', 'Sala', 'Quarto', 'Lavanderia', 'Escritório', 'Outros'];
+
+  const fetchAppliances = async () => {
     try {
-      await api.patch('/residence_config', data);
-      toast.success('Configurações salvas com sucesso!', {
-        style: {
-          background: '#38A169',
-          color: 'white',
-          borderRadius: '8px',
-          padding: '16px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        },
+      const response = await api.get('/appliances');
+      const groupedData: GroupedAppliances = response.data;
+      const flatList = Object.values(groupedData).flat();
+      setAllAppliances(flatList);
+    } catch (error) { console.error("Erro ao buscar aparelhos:", error); }
+  };
+
+  useEffect(() => { fetchAppliances(); }, []);
+
+  const filteredAndGroupedAppliances = useMemo(() => {
+    const filtered = allAppliances
+      .filter(appliance => {
+        return selectedCategory === 'Todos' || appliance.category === selectedCategory;
+      })
+      .filter(appliance => {
+        return appliance.name.toLowerCase().includes(searchTerm.toLowerCase());
       });
+
+    return filtered.reduce<GroupedAppliances>((acc, current) => {
+      const category = current.category;
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(current);
+      return acc;
+    }, {});
+  }, [allAppliances, searchTerm, selectedCategory]);
+
+  const clearForm = () => {
+    setName('');
+    setPower('');
+    setCategory('Outros');
+    setEditingAppliance(null);
+  };
+
+  const handleStartEdit = (appliance: Appliance) => {
+    setEditingAppliance(appliance);
+    setName(appliance.name);
+    setPower(String(appliance.power_watts));
+    setCategory(appliance.category);
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!name || !power || !category) { return alert('Por favor, preencha todos os campos.'); }
+
+    const applianceData = {
+        name,
+        power_watts: parseInt(power, 10),
+        category
+    };
+
+    try {
+        if (editingAppliance) {
+            await api.put(`/appliances/${editingAppliance.id}`, applianceData);
+        } else {
+            await api.post('/appliances', applianceData);
+        }
+        clearForm();
+        fetchAppliances();
     } catch (error) {
-      toast.error('Ocorreu um erro ao salvar as configurações.', {
-        style: {
-          background: '#E53E3E',
-          color: 'white',
-          borderRadius: '8px',
-          padding: '16px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        },
-      });
-      console.error("Erro ao salvar:", error);
+        console.error("Erro ao salvar aparelho:", error);
+        alert('Não foi possível salvar o aparelho.');
+    }
+  };
+
+  const handleDeleteAppliance = async (id: number) => {
+    if (window.confirm('Tem certeza que deseja excluir este aparelho?')) {
+      try {
+        await api.delete(`/appliances/${id}`);
+        fetchAppliances();
+      } catch (error) { console.error("Erro ao deletar aparelho:", error); }
     }
   };
 
   return (
-    <>
-      <Toaster position="top-right" reverseOrder={false} />
-      <SettingsWrapper>
-        <FormContainer>
-          <Header>
-            <h1>Configurar Residência</h1>
-            <p>Ajuste as informações da sua casa para obter análises mais precisas.</p>
-          </Header>
-          <FormCard onSubmit={handleSubmit(onSubmit)}>
-            {/* Campo Nome da Residência */}
-            <InputGroup>
-              <label htmlFor="name"><Pencil />Nome da Residência</label>
-              <Input id="name" type="text" placeholder="Ex: Minha Casa" {...register('name')} />
-              {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
-            </InputGroup>
+    <SettingsWrapper>
+      <Header>
+        <h1>Configurar Residência</h1>
+        <p>Adicione, edite ou remova os eletrodomésticos da sua casa.</p>
+      </Header>
+      <ContentGrid>
+        <aside>
+          <Card as="section">
+            <CardTitle>{editingAppliance ? <Edit /> : <PlusCircle />} {editingAppliance ? 'Editar Aparelho' : 'Adicionar Aparelho'}</CardTitle>
+            <Form onSubmit={handleSubmit}>
+              <FormGroup>
+                <Label htmlFor="name">Nome do Aparelho</Label>
+                <Input id="name" type="text" placeholder="Ex: Geladeira" value={name} onChange={e => setName(e.target.value)} />
+              </FormGroup>
+              <FormGroup>
+                <Label htmlFor="power">Potência (em Watts)</Label>
+                <Input id="power" type="number" placeholder="Ex: 150" value={power} onChange={e => setPower(e.target.value)} />
+              </FormGroup>
+              <FormGroup>
+                <Label htmlFor="category">Categoria</Label>
+                <Select id="category" value={category} onChange={e => setCategory(e.target.value)}>
+                  {applianceCategories.filter(c => c !== 'Todos').map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </Select>
+              </FormGroup>
+              <Button type="submit">{editingAppliance ? 'Salvar Alterações' : 'Adicionar'}</Button>
+              {editingAppliance && (
+                <SecondaryButton type="button" onClick={clearForm}>Cancelar Edição</SecondaryButton>
+              )}
+            </Form>
+          </Card>
+          
+          <Card as="section" style={{ marginTop: '2rem' }}>
+            <CardTitle><HelpCircle />Como Encontrar os Watts?</CardTitle>
+            <TipsList>
+              <TipItem><Sticker size={18} />Procure por uma etiqueta no próprio aparelho (geralmente na parte de trás ou embaixo).</TipItem>
+              <TipItem><BookOpen size={18} />Consulte o manual de instruções do produto.</TipItem>
+              <TipItem><Search size={18} />Pesquise online pelo modelo do seu aparelho + a palavra "potência" ou "watts".</TipItem>
+            </TipsList>
+          </Card>
+        </aside>
 
-            {/* Campo Tipo de Residência */}
-            <InputGroup>
-              <label htmlFor="type"><Building />Tipo de Residência</label>
-              <Select id="type" {...register('type')}>
-                <option value="">Selecione...</option>
-                <option value="Casa">Casa</option>
-                <option value="Apartamento">Apartamento</option>
-              </Select>
-              {errors.type && <ErrorMessage>{errors.type.message}</ErrorMessage>}
-            </InputGroup>
+        <ListCard as="main">
+          <CardTitle><Zap />Meus Aparelhos</CardTitle>
+          <FilterBar>
+            <SearchInput>
+              <Search size={18} />
+              <Input 
+                type="text"
+                placeholder="Nome do aparelho"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </SearchInput>
+            <Select 
+              value={selectedCategory} 
+              onChange={e => setSelectedCategory(e.target.value)}
+            >
+              {applianceCategories.map(cat => <option key={cat} value={cat}>{cat === 'Todos' ? 'Todas as Categorias' : cat}</option>)}
+            </Select>
+            {(searchTerm || selectedCategory !== 'Todos') && (
+              <ClearFilterButton onClick={handleClearFilters}>
+                <X size={16} />
+                Limpar
+              </ClearFilterButton>
+            )}
+          </FilterBar>
 
-            {/* Campo Número de Moradores */}
-            <InputGroup>
-              <label htmlFor="residents"><Users />Número de Moradores</label>
-              <Input id="residents" type="number" {...register('residents', { valueAsNumber: true })} />
-              {errors.residents && <ErrorMessage>{errors.residents.message}</ErrorMessage>}
-            </InputGroup>
-
-            {/* Campo Número de Cômodos */}
-            <InputGroup>
-              <label htmlFor="rooms"><Home />Número de Cômodos</label>
-              <Input id="rooms" type="number" {...register('rooms', { valueAsNumber: true })} />
-              {errors.rooms && <ErrorMessage>{errors.rooms.message}</ErrorMessage>}
-            </InputGroup>
-
-            {/* Campo Custo por kWh */}
-            <InputGroup>
-              <label htmlFor="kwh_cost"><DollarSign />Custo por kWh (R$)</label>
-              <Input id="kwh_cost" type="number" step="0.01" placeholder="Ex: 0.75" {...register('kwh_cost', { valueAsNumber: true })} />
-              {errors.kwh_cost && <ErrorMessage>{errors.kwh_cost.message}</ErrorMessage>}
-            </InputGroup>
-
-            <SubmitButton type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
-            </SubmitButton>
-          </FormCard>
-        </FormContainer>
-
-        <InfoPanel>
-          <h4>Por que esses dados são importantes?</h4>
-          <ul>
-            <li>
-              <CheckCircle />
-              <span><strong>Dicas Personalizadas:</strong> O número de moradores e o tipo de residência nos ajudam a oferecer dicas mais relevantes.</span>
-            </li>
-            <li>
-              <CheckCircle />
-              <span><strong>Simulações Precisas:</strong> O custo do kWh é essencial para simular seus gastos em Reais (R$) com exatidão.</span>
-            </li>
-            <li>
-              <CheckCircle />
-              <span><strong>Metas Realistas:</strong> Usamos essas informações para te ajudar a definir metas de consumo alcançáveis para sua realidade.</span>
-            </li>
-          </ul>
-        </InfoPanel>
-      </SettingsWrapper>
-    </>
+          {Object.keys(filteredAndGroupedAppliances).length > 0 ? (
+            Object.keys(filteredAndGroupedAppliances).sort().map(categoryKey => (
+                <div key={categoryKey}>
+                    <CategoryHeader>{categoryKey}</CategoryHeader> 
+                    <ApplianceList>
+                        {filteredAndGroupedAppliances[categoryKey].map(appliance => (
+                            <ApplianceItem key={appliance.id}>
+                                <ApplianceInfo>
+                                    <strong>{appliance.name}</strong>
+                                    <div><Zap size={12} /> {appliance.power_watts} W</div>
+                                </ApplianceInfo>
+                                <ActionButtons>
+                                    <EditButton onClick={() => handleStartEdit(appliance)} title="Editar"><Edit size={16}/></EditButton>
+                                    <DeleteButton onClick={() => handleDeleteAppliance(appliance.id)} title="Excluir"><Trash2 size={16} /></DeleteButton>
+                                </ActionButtons>
+                            </ApplianceItem>
+                        ))}
+                    </ApplianceList>
+                </div>
+            ))
+            ) : (
+              <EmptyState>
+                <Search size={48} />
+                <h3>Nenhum Aparelho Encontrado</h3>
+                <p>Tente ajustar sua busca ou filtro.</p>
+              </EmptyState>
+            )}
+        </ListCard>
+      </ContentGrid>
+    </SettingsWrapper>
   );
-};
-
-export default ResidenceSettings;
+}

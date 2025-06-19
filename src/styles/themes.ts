@@ -10,6 +10,16 @@ export const lightTheme = {
   primaryHover: "#1b4332",
   cardBg: "#FFFFFF",
   borderColor: "#e9ecef",
+  secondary: "#adb5bd",
+  secondaryHover: "#868e96",
+  error: "#dc3545",
+  success: "#198754",
+  warning: "#ffc107",
+  info: "#0d6efd",
+  link: "#0d6efd",
+  linkHover: "#0b5ed7",
+  buttonBg: "#2d6a4f",
+  buttonBgHover: "#1b4332",
 };
 
 export const darkTheme = {
@@ -22,4 +32,14 @@ export const darkTheme = {
   primaryHover: '#36b36a', 
   cardBg: '#2a2a2a', 
   borderColor: '#3a3a3a',
+  secondary: '#6c757d',
+  secondaryHover: '#495057',
+  error: '#ff6b6b',
+  success: '#4ade80',
+  warning: '#f59e0b',
+  info: '#3b82f6',
+  link: '#3b82f6',
+  linkHover: '#2563eb',
+  buttonBg: '#4ade80',
+  buttonBgHover: '#36b36a',
 };
