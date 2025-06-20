@@ -1,298 +1,240 @@
-// src/pages/LandingPage.tsx
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { Link } from 'react-router-dom';
-import { BarChart3, Bot, Lightbulb, ArrowRight, History, Settings } from 'lucide-react';
+import { Monitor, BarChart, Bot, Lightbulb } from 'lucide-react';
 import { PublicHeader } from '../components/common/PublicHeader';
-import { useAuth } from '../contexts/authContext';
+import { Link } from 'react-router-dom';
 
-const gradientAnimation = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
-// --- COMPONENTES ESTILIZADOS ---
-
+// --- Componentes Estilizados ---
 const PageWrapper = styled.div`
-  font-family: 'Poppins', sans-serif;
-  background-color: ${({ theme }) => theme.body}; 
-  color: ${({ theme }) => theme.text}; 
-`;
-
-const HeroSection = styled.section`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 3rem 2rem;
-  padding-top: 10rem;
-  background: ${({ theme }) => theme.theme === 'light' 
-    ? 'linear-gradient(135deg, #d8f3dc, #b7e4c7, #95d5b2)' 
-    : 'linear-gradient(135deg, #1b4332, #2d6a4f, #40916c)'};
-  background-size: 200% 200%;
-  animation: ${gradientAnimation} 15s ease infinite;
-  transition: background 0.3s ease;
-
-  h2 {
-    font-size: 3rem;
-    font-weight: 800;
-    line-height: 1.2;
-    color: ${({ theme }) => theme.theme === 'light' ? '#1b4332' : '#FFFFFF'};
-    max-width: 800px;
-    margin-bottom: 1.5rem;
-  }
-
-  p {
-    font-size: 1.1rem;
-    max-width: 600px;
-    /* A cor do parágrafo se adapta ao tema */
-    color: ${({ theme }) => theme.theme === 'light' ? '#2d6a4f' : '#E0E0E0'};
-    margin-bottom: 2.5rem;
-  }
-`;
-
-const PrimaryCallToAction = styled(Link)`
-  background-color: ${({ theme }) => theme.primary}; 
-  color: #FFFFFF; 
-  padding: 0.8rem 2rem;
-  border-radius: 50px;
-  text-decoration: none;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.1rem;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.primaryHover}; 
-    transform: translateY(-2px);
-  }
+  background-color: ${({ theme }) => theme.body};
+  color: ${({ theme }) => theme.text};
+  transition: background-color 0.3s ease, color 0.3s ease;
 `;
 
 const Section = styled.section`
   padding: 6rem 5%;
+  max-width: 1200px;
+  margin: 0 auto;
   text-align: center;
-  position: relative;
-  background-color: ${({ theme, color }) => color || theme.body}; 
-  transition: background-color 0.3s ease;
-
-  h3 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: ${({ theme }) => theme.primary};
-    margin-bottom: 1rem;
-  }
-
-  p.section-description {
-    font-size: 1.1rem;
-    color: ${({ theme }) => theme.textSecondary}; 
-    line-height: 1.7;
-    max-width: 700px;
-    margin: 0 auto 4rem auto;
-  }
+  @media(max-width: 768px) { padding: 4rem 5%; }
 `;
 
-const ShapeDivider = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
-  line-height: 0;
-  transform: rotate(180deg);
-
-  svg {
-    position: relative;
-    display: block;
-    width: calc(100% + 1.3px);
-    height: 110px;
-  }
-
-  .shape-fill {
-    fill: ${({ color }) => color}; 
-    transition: fill 0.3s ease;
-  }
+const SectionTitle = styled.h2`
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
 `;
 
-const FeatureList = styled.div`
-display: flex;
-flex-direction: column;
-gap: 2rem;
-align-items: center;
-margin: 0 auto 2rem auto;
-width: 100%;
-max-width: 900px;
+const SectionSubtitle = styled.p`
+  font-size: 1.1rem;
+  color: ${({ theme }) => theme.textSecondary};
+  max-width: 600px;
+  margin: 0 auto 4rem auto;
 `;
 
-const FeatureItem = styled.div`
+const HeroSection = styled(Section)`
+  padding-top: 12rem; /* Aumentado para compensar a falta da imagem */
+  padding-bottom: 8rem;
+  min-height: 80vh; 
   display: flex;
-  align-items: flex-start;
-  gap: 2rem;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  margin: 0 auto 2.5rem auto;
-  max-width: 700px;
-  padding: 1.5rem;
+`;
+
+const HeroTitle = styled.h1`
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  animation: ${fadeInUp} 0.8s ease-out;
+  color: ${({ theme }) => theme.text};
+  span { color: ${({ theme }) => theme.primary}; }
+  @media(max-width: 768px) { font-size: 2.5rem; }
+`;
+
+const HeroSubtitle = styled.p`
+  font-size: 1.25rem;
+  color: ${({ theme }) => theme.textSecondary};
+  max-width: 650px;
+  margin-bottom: 2.5rem;
+  animation: ${fadeInUp} 1s ease-out;
+`;
+
+const CtaButton = styled(Link)`
+  padding: 1rem 2.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  background: ${({ theme }) => `linear-gradient(45deg, ${theme.primary}, ${theme.primaryHover})`};
+  color: white;
+  transition: all 0.3s ease;
+  animation: ${fadeInUp} 1.2s ease-out;
+  &:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 20px ${({ theme }) => `${theme.primary}40`};
+  }
+`;
+
+const FeaturesGrid = styled.div`
+  display: grid;
+  gap: 2rem;
+  text-align: left;
   
+  /* Padrão de 1 coluna para mobile */
+  grid-template-columns: 1fr;
 
-  svg {
-    flex-shrink: 0;
-    color: ${({ theme }) => theme.primary};
-    transition: color 0.3s ease;
+  /* 2 colunas para tablets e desktops */
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
   }
+`;
 
-  .text-content {
-    text-align: left;
-
-    h4 {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-      color: ${({ theme }) => theme.theme === 'light' ? '#1b4332' : '#fff'};
-    }
-
-    p {
-      font-size: 1rem;
-      color: ${({ theme }) => theme.textSecondary};
-      margin: 0;
-    }
+const FeatureCard = styled.div`
+  background-color: ${({ theme }) => theme.cardBg};
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px ${({ theme }) => theme.shadowColor};
   }
+`;
+
+const FeatureIcon = styled.div`
+  display: inline-flex;
+  padding: 0.8rem;
+  border-radius: 10px;
+  background-color: ${({ theme }) => `${theme.primary}20`};
+  color: ${({ theme }) => theme.primary};
+  margin-bottom: 1.5rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+`;
+
+const FeatureTitle = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+`;
+
+const FeatureText = styled.p`
+  color: ${({ theme }) => theme.textSecondary};
+  line-height: 1.6;
+`;
+
+const HowItWorksContainer = styled.div`
+  display: flex;
+  justify-content: space-around;
+  gap: 2rem;
+  margin-top: 4rem;
+  
+  @media(max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+const StepCard = styled.div`
+  flex: 1;
+`;
+
+const StepNumber = styled.div`
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: ${({ theme }) => theme.primary};
+  margin-bottom: 1rem;
+`;
+
+const CtaSection = styled(Section)`
+  background-color: ${({ theme }) => theme.bodySecondary};
+  border-radius: 20px;
+  margin: 4rem auto;
+  transition: background-color 0.3s ease;
 `;
 
 const Footer = styled.footer`
   padding: 3rem 5%;
   text-align: center;
-  background-color: ${({ theme }) => theme.primaryHover}; 
-  color: rgba(255, 255, 255, 0.8);
-  transition: background-color 0.3s ease;
-
-  p {
-    margin: 0;
-  }
+  color: ${({ theme }) => theme.textSecondary};
+  border-top: 1px solid ${({ theme }) => theme.borderColor};
+  transition: border-top-color 0.3s ease;
 `;
 
-// --- COMPONENTE PRINCIPAL ---
-
-export const LandingPage = () => {
-  const { isAuthenticated } = useAuth(); 
-  const navigate = useNavigate(); 
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/app');
-    }
-  }, [isAuthenticated, navigate]);
-
+const LandingPage = () => {
+  const features = [
+    { icon: <Monitor size={28}/>, title: "Monitore em Tempo Real", text: "Acompanhe seu consumo de energia e custos com precisão, diretamente no seu painel de controle." },
+    { icon: <BarChart size={28}/>, title: "Histórico Detalhado", text: "Analise seu uso de energia ao longo do tempo para identificar padrões e oportunidades de economia." },
+    { icon: <Bot size={28}/>, title: "Simulador Inteligente", text: "Planeje seus gastos simulando o consumo de novos eletrodomésticos antes mesmo de comprá-los." },
+    { icon: <Lightbulb size={28}/>, title: "Dicas Personalizadas", text: "Receba dicas de economia de energia que realmente funcionam, baseadas no seu perfil de consumo." },
+  ];
+  
   return (
     <PageWrapper>
       <PublicHeader />
-
+      
       <main>
         <HeroSection>
-          <h2>Monitore, economize e contribua para um futuro mais verde.</h2>
-          <p>EcoEnergia te ajuda a entender e otimizar seu consumo de energia, promovendo a sustentabilidade no seu dia a dia.</p>
-          <PrimaryCallToAction to="/cadastro">
-            Comece agora
-            <ArrowRight size={20} />
-          </PrimaryCallToAction>
+          <HeroTitle>
+            A energia que você controla, <span>o dinheiro que você economiza.</span>
+          </HeroTitle>
+          <HeroSubtitle>
+            EcoEnergia é a plataforma definitiva para entender sua conta de luz, reduzir seu consumo e ajudar o planeta. Tome as rédeas da sua energia hoje.
+          </HeroSubtitle>
+          <CtaButton to="/cadastro">Comece a Economizar Agora</CtaButton>
         </HeroSection>
-
-        <Section id="dashboard">
-          <h3>Acompanhe seu Consumo em Tempo Real</h3>
-          <p className="section-description">Visualize de forma clara e intuitiva seus gastos diários, semanais e mensais. Identifique padrões de consumo e saiba exatamente onde você pode economizar.</p>
-          <FeatureList>
-            <FeatureItem>
-              <BarChart3 size={80}/>
-              <div className="text-content">
-                <h4>Gráficos Detalhados</h4>
-                <p>Explore gráficos interativos que facilitam a compreensão do seu uso de energia, com metas de consumo e comparativos.</p>
-              </div>
-            </FeatureItem>
-          </FeatureList>
-          <ShapeDivider color={({ theme }) => theme.bodySecondary}>
-            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
-            </svg>
-          </ShapeDivider>
+        
+        <Section id="features">
+          <SectionTitle>Tudo o que você precisa para uma vida mais sustentável</SectionTitle>
+          <SectionSubtitle>Nossa plataforma foi desenhada para ser simples, intuitiva e poderosa.</SectionSubtitle>
+          <FeaturesGrid>
+            {features.map(feature => (
+              <FeatureCard key={feature.title}>
+                <FeatureIcon>{feature.icon}</FeatureIcon>
+                <FeatureTitle>{feature.title}</FeatureTitle>
+                <FeatureText>{feature.text}</FeatureText>
+              </FeatureCard>
+            ))}
+          </FeaturesGrid>
         </Section>
-
-        <Section id="simulator" color={({ theme }) => theme.bodySecondary}>
-          <h3>Planeje e Simule sua Economia</h3>
-          <p className="section-description">Com o nosso simulador, você pode estimar o impacto de novos aparelhos ou mudanças de hábitos no seu consumo de energia antes de implementá-los. Planeje suas compras de forma consciente e veja o potencial de economia.</p>
-          <FeatureList>
-             <FeatureItem>
-              <Bot size={80}/>
-              <div className="text-content">
-                <h4>Cálculos Personalizados</h4>
-                <p>Simule o consumo de diferentes eletrodomésticos e compare cenários para tomar decisões mais inteligentes e econômicas.</p>
-              </div>
-            </FeatureItem>
-          </FeatureList>
-          <ShapeDivider color={({ theme }) => theme.body}>
-            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-               <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
-            </svg>
-          </ShapeDivider>
+        
+        <Section id="how-it-works">
+          <SectionTitle>Comece em apenas 3 passos</SectionTitle>
+          <HowItWorksContainer>
+            <StepCard>
+              <StepNumber>1</StepNumber>
+              <FeatureTitle>Cadastre-se</FeatureTitle>
+              <FeatureText>Crie sua conta gratuita em menos de um minuto.</FeatureText>
+            </StepCard>
+            <StepCard>
+              <StepNumber>2</StepNumber>
+              <FeatureTitle>Configure sua Residência</FeatureTitle>
+              <FeatureText>Adicione informações básicas e seus eletrodomésticos.</FeatureText>
+            </StepCard>
+            <StepCard>
+              <StepNumber>3</StepNumber>
+              <FeatureTitle>Economize!</FeatureTitle>
+              <FeatureText>Comece a monitorar, simular e receber dicas para reduzir sua conta.</FeatureText>
+            </StepCard>
+          </HowItWorksContainer>
         </Section>
-
-        <Section id="history">
-          <h3>Analise seu Histórico de Consumo</h3>
-          <p className="section-description">Acesse um histórico completo do seu consumo de energia ao longo do tempo. Compare seus gastos entre diferentes períodos e identifique as épocas do ano com maior consumo para otimizar suas estratégias de economia.</p>
-          <FeatureList>
-            <FeatureItem>
-              <History size={80}/>
-              <div className="text-content">
-                <h4>Dados Organizados</h4>
-                <p>Fácil acesso a todo o seu histórico de consumo em um só lugar, com filtros por dia, mês e ano.</p>
-              </div>
-            </FeatureItem>
-          </FeatureList>
-          <ShapeDivider color={({ theme }) => theme.bodySecondary}>
-            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
-            </svg>
-          </ShapeDivider>
-        </Section>
-
-        <Section id="tips" color={({ theme }) => theme.bodySecondary}>
-          <h3>Receba Dicas e Conteúdo Exclusivo</h3>
-          <p className="section-description">Nossa seção de dicas está repleta de informações valiosas sobre como economizar energia, escolher eletrodomésticos eficientes e adotar práticas sustentáveis. Aprenda e aplique no seu dia a dia.</p>
-          <FeatureList>
-            <FeatureItem>
-              <Lightbulb size={80}/>
-              <div className="text-content">
-                <h4>Artigos e Guias</h4>
-                <p>Explore nosso conteúdo educativo com dicas práticas e informações relevantes para um consumo mais consciente.</p>
-              </div>
-            </FeatureItem>
-          </FeatureList>
-          <ShapeDivider color={({ theme }) => theme.body}>
-            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-               <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
-            </svg>
-          </ShapeDivider>
-        </Section>
-
-        <Section id="settings">
-          <h3>Configure sua Residência</h3>
-          <p className="section-description">Personalize o sistema com as informações da sua casa, como o número de cômodos e moradores. Esses dados nos ajudam a fornecer análises mais precisas e dicas ainda mais relevantes para você.</p>
-          <FeatureList>
-            <FeatureItem>
-              <Settings size={80}/>
-              <div className="text-content">
-                <h4>Personalização Detalhada</h4>
-                <p>Informe as características da sua residência para uma experiência otimizada e cálculos de consumo mais precisos.</p>
-              </div>
-            </FeatureItem>
-          </FeatureList>
-        </Section>
+        
+        <CtaSection id="cta">
+          <SectionTitle>Pronto para transformar sua relação com a energia?</SectionTitle>
+          <CtaButton to="/cadastro">Quero Fazer Parte</CtaButton>
+        </CtaSection>
       </main>
-
+      
       <Footer>
-        <p>© 2025 EcoEnergia. Conectando você a um consumo consciente e sustentável.</p>
+        <p>&copy; {new Date().getFullYear()} EcoEnergia. Todos os direitos reservados.</p>
       </Footer>
     </PageWrapper>
   );
 };
+
+export default LandingPage;
