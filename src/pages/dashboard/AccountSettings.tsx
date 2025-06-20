@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/authContext';
 import api from '../../services/api';
 import { User as UserIcon, Upload } from 'lucide-react';
 
-// --- Componentes Estilizados (Adicionados os que faltavam) ---
+// --- Componentes Estilizados ---
 
 const SettingsWrapper = styled.div`
   max-width: 800px;
@@ -20,6 +20,7 @@ const Header = styled.div`
     font-size: 2.5rem;
     font-weight: 800;
     color: ${({ theme }) => theme.text};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -28,9 +29,9 @@ const Form = styled.form`
   border: 1px solid ${({ theme }) => theme.borderColor};
   border-radius: 12px;
   padding: 2.5rem;
+  transition: all 0.7s ease;
 `;
 
-// Estilos do Avatar (que estavam faltando)
 const AvatarSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -40,6 +41,7 @@ const AvatarSection = styled.div`
   border-radius: 12px;
   padding: 2.5rem;
   margin-bottom: 2rem;
+  transition: all 0.7s ease;
 `;
 
 const AvatarWrapper = styled.div`
@@ -55,6 +57,7 @@ const AvatarImage = styled.img`
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid ${({ theme }) => theme.primary};
+  transition: all 0.7s ease;
 `;
 
 const AvatarFallback = styled.div`
@@ -67,6 +70,7 @@ const AvatarFallback = styled.div`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.textSecondary};
+  transition: all 0.7s ease;
 `;
 
 const UploadLabel = styled.label`
@@ -83,7 +87,7 @@ const UploadLabel = styled.label`
   justify-content: center;
   cursor: pointer;
   border: 2px solid ${({ theme }) => theme.cardBg};
-  transition: transform 0.2s ease;
+  transition: all 0.7s ease;
 
   &:hover {
     transform: scale(1.1);
@@ -108,6 +112,7 @@ const SectionTitle = styled.h2`
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
 `;
 
 const FormGroup = styled.div`
@@ -119,6 +124,7 @@ const Label = styled.label`
   font-weight: 500;
   color: ${({ theme }) => theme.textSecondary};
   margin-bottom: 0.5rem;
+  transition: all 0.7s ease;
 `;
 
 const Input = styled.input`
@@ -129,12 +135,13 @@ const Input = styled.input`
   border-radius: 8px;
   color: ${({ theme }) => theme.text};
   font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.7s ease;
 
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.primary};
     box-shadow: 0 0 0 3px ${({ theme }) => theme.primary}30;
+    transition: all 0.7s ease;
   }
 `;
 
@@ -152,13 +159,15 @@ const Button = styled.button`
   font-size: 1rem;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.7s ease;
 
   &.primary {
     background-color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
     color: white;
     &:hover {
       background-color: ${({ theme }) => theme.primaryHover};
+      transition: all 0.7s ease;
     }
   }
 
@@ -166,14 +175,16 @@ const Button = styled.button`
     background-color: transparent;
     border: 1px solid ${({ theme }) => theme.borderColor};
     color: ${({ theme }) => theme.textSecondary};
+    transition: all 0.7s ease;
     &:hover {
       background-color: ${({ theme }) => theme.cardBg};
       color: ${({ theme }) => theme.text};
+      transition: all 0.7s ease;
     }
   }
 `;
 
-// --- Componente da Página Corrigido ---
+// --- Componente da Página ---
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { user, updateUser, loading: authLoading } = useAuth();
@@ -189,7 +200,6 @@ const AccountSettings = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  // Popula o formulário com os dados do usuário do contexto
   useEffect(() => {
     if (user) {
       setFormData({ name: user.name, email: user.email });
@@ -220,13 +230,13 @@ const AccountSettings = () => {
       const response = await api.put('/users/me/avatar', uploadFormData);
       
       const updatedUser = { ...user, avatar_url: response.data.avatar_url };
-      updateUser(updatedUser); // Atualiza o contexto
-      setAvatarFile(null); // Limpa o arquivo para o botão sumir
+      updateUser(updatedUser);
+      setAvatarFile(null); 
       alert('Avatar atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao fazer upload do avatar:', error);
       alert('Falha ao atualizar o avatar.');
-      setAvatarPreview(user.avatar_url || null); // Reverte o preview
+      setAvatarPreview(user.avatar_url || null);
     }
   };
 
@@ -234,9 +244,8 @@ const AccountSettings = () => {
     e.preventDefault();
     if (!user) return;
     try {
-      // ATENÇÃO: Verifique se você tem uma rota PUT /api/users/me no seu backend
       const response = await api.put('/users/me', formData);
-      updateUser(response.data); // Atualiza o contexto com os novos dados
+      updateUser(response.data);
       alert('Informações atualizadas com sucesso!');
       navigate('/app/perfil');
     } catch (error) {
@@ -247,7 +256,6 @@ const AccountSettings = () => {
   
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // A lógica de alteração de senha deve ser implementada no backend
     alert('Funcionalidade de alterar senha ainda não implementada.');
   };
 

@@ -18,6 +18,7 @@ const Header = styled.div`
     font-size: 2.5rem;
     font-weight: 800;
     color: ${({ theme }) => theme.text};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -31,10 +32,11 @@ const EditProfileButton = styled(Link)`
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  transition: background-color 0.2s ease;
+  transition: all 0.7s ease;
 
   &:hover {
     background-color: ${({ theme }) => theme.primaryHover};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -52,6 +54,7 @@ const AvatarImage = styled.img`
   object-fit: cover;
   border: 4px solid ${({ theme }) => theme.primary};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.7s ease;
 `;
 
 const AvatarFallback = styled.div`
@@ -64,6 +67,7 @@ const AvatarFallback = styled.div`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.textSecondary};
+  transition: all 0.7s ease;
 `;
 
 const ProfileCard = styled.div`
@@ -72,7 +76,8 @@ const ProfileCard = styled.div`
   border-radius: 12px;
   padding: 2.5rem;
   max-width: 700px;
-  margin: 0 auto; // Centraliza o card
+  margin: 0 auto;
+  transition: all 0.7s ease;
 `;
 
 const InfoRow = styled.div`
@@ -90,6 +95,7 @@ const IconWrapper = styled.div`
   margin-right: 1.5rem;
   display: flex;
   align-items: center;
+  transition: all 0.7s ease;
 `;
 
 const InfoDetails = styled.div`
@@ -101,12 +107,14 @@ const InfoLabel = styled.span`
   font-size: 0.9rem;
   color: ${({ theme }) => theme.textSecondary};
   margin-bottom: 0.25rem;
+  transition: all 0.7s ease;
 `;
 
 const InfoValue = styled.span`
   font-size: 1.1rem;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
+  transition: all 0.7s ease;
 `;
 
 const LoadingState = styled.div`
@@ -114,6 +122,7 @@ const LoadingState = styled.div`
   padding: 2rem;
   font-size: 1.1rem;
   color: ${({ theme }) => theme.textSecondary};
+  transition: all 0.7s ease;
 `;
 
 // --- Componente da Página ---

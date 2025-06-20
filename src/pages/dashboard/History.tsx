@@ -23,8 +23,8 @@ const FilterButton = styled.button<{ isActive: boolean }>`
   border-radius: 50px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  &:hover { background-color: ${({ theme }) => theme.primaryHover}; color: white; border-color: ${({ theme }) => theme.primaryHover}; }
+  transition: all 0.7s ease;
+  &:hover { background-color: ${({ theme }) => theme.primaryHover}; color: white; border-color: ${({ theme }) => theme.primaryHover}; transition: all 0.7s ease; }
 `;
 const SummaryGrid = styled.div`
   display: grid;
@@ -35,15 +35,17 @@ const SummaryGrid = styled.div`
 const SummaryCard = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
   border-radius: 16px;
   padding: 1.5rem;
-  h4 { margin: 0 0 0.5rem 0; color: ${({ theme }) => theme.textSecondary}; }
-  p { margin: 0; font-size: 2rem; font-weight: 700; color: ${({ theme }) => theme.primary}; }
+  h4 { margin: 0 0 0.5rem 0; color: ${({ theme }) => theme.textSecondary}; transition: all 0.7s ease; }
+  p { margin: 0; font-size: 2rem; font-weight: 700; color: ${({ theme }) => theme.primary}; transition: all 0.7s ease; }
 `;
 
 const ChartCard = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
   border-radius: 16px;
   padding: 2rem;
   height: 400px;
@@ -55,11 +57,13 @@ const Header = styled.header`
     font-size: 2.5rem;
     font-weight: 800;
     color: ${({ theme }) => theme.text};
+    transition: all 0.7s ease;
     margin-bottom: 0.5rem;
   }
   p {
     font-size: 1.2rem;
     color: ${({ theme }) => theme.textSecondary};
+    transition: all 0.7s ease;
     opacity: 0.9;
   }
 `;

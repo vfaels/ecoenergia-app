@@ -25,6 +25,7 @@ const fadeInUp = keyframes`
 const PageWrapper = styled.div`
   padding: 2rem;
   color: ${({ theme }) => theme.text};
+  transition: background-color 0.7s ease, color 0.7s ease;
 `;
 
 const Title = styled.h1`
@@ -64,6 +65,7 @@ const Card = styled.div<{ delay?: number }>`
   opacity: 0;
   animation: ${fadeInUp} 0.6s ease-out forwards;
   animation-delay: ${({ delay = 0 }) => delay}s;
+  transition: background-color 0.7s ease, border 0.7s ease;
 
   &::before {
     content: '';
@@ -73,6 +75,7 @@ const Card = styled.div<{ delay?: number }>`
     right: 0;
     height: 5px;
     background: ${({ theme }) => theme.primary};
+    transition: background 0.6s ease;
   }
 `;
 
@@ -82,17 +85,20 @@ const CardHeader = styled.div`
   gap: 0.75rem;
   color: ${({ theme }) => theme.textSecondary};
   font-weight: 600;
+  transition: color 0.7s ease;
 `;
 
 const StatValue = styled.div`
   font-size: 2.5rem;
   font-weight: 700;
   color: ${({ theme }) => theme.text};
+  transition: color 0.7s ease;
   
   span {
     font-size: 1.5rem;
     color: ${({ theme }) => theme.textSecondary};
     margin-left: 0.5rem;
+    transition: color 0.7s ease;
   }
 `;
 
@@ -103,6 +109,7 @@ const ProgressBar = styled.div`
   border-radius: 4px;
   overflow: hidden;
   margin-top: auto; 
+  transition: background 0.7s ease;
 `;
 
 const ProgressFill = styled.div<{ percentage: number }>`
@@ -110,8 +117,9 @@ const ProgressFill = styled.div<{ percentage: number }>`
   height: 100%;
   border-radius: 4px;
   background-color: ${({ theme }) => theme.primary};
-  transition: width 0.5s ease-in-out;
+  transition: width 0.5s ease-in-out, background-color 0.7s ease;
   box-shadow: ${({ theme }) => `0 2px 4px ${theme.primary}40`};
+
 `;
 
 const SummaryGrid = styled.div`
@@ -141,6 +149,7 @@ const StyledLink = styled(Link)`
   color: ${({ theme }) => theme.primary};
   text-decoration: none;
   align-self: flex-end;
+  transition: color 0.7s ease;
   &:hover { text-decoration: underline; }
 `;
 
@@ -151,6 +160,7 @@ const Alert = styled.div<{ isGood: boolean }>`
   background-color: ${({ isGood, theme }) => isGood ? `${theme.primary}20` : '#fdecea'};
   color: ${({ isGood, theme }) => isGood ? theme.primary : '#b71c1c'};
   border: 1px solid ${({ isGood, theme }) => isGood ? theme.primary : '#f5c6cb'};
+  transition: background-color 0.7s ease, color 0.7s ease, border: 0.7s ease;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -168,12 +178,13 @@ const ActionButton = styled(Link)`
   text-decoration: none;
   color: ${({ theme }) => theme.text};
   font-weight: 600;
-  transition: all 0.2s ease-in-out;
+  transition: background-color 0.7s ease, color 0.7s ease, border: 0.7s ease;
 
   &:hover {
     border-color: ${({ theme }) => theme.primary};
     color: ${({ theme }) => theme.primary};
     transform: translateX(5px);
+    transition: border-color 0.7s ease, color 0.7s ease;
   }
 
   & + & {

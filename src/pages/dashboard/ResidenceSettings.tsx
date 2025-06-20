@@ -26,16 +26,19 @@ const Header = styled.header`
     font-size: 2.5rem;
     font-weight: 800;
     color: ${({ theme }) => theme.text};
+    transition: all 0.7s ease;
   }
   p {
     font-size: 1.2rem;
     color: ${({ theme }) => theme.textSecondary};
+    transition: all 0.7s ease;
   }
 `;
 
 const TabsContainer = styled.div`
   display: flex;
   border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
   margin-bottom: 2rem;
 `;
 
@@ -48,16 +51,17 @@ const TabButton = styled.button<{ isActive: boolean }>`
   font-weight: 600;
   color: ${({ theme, isActive }) => isActive ? theme.primary : theme.textSecondary};
   border-bottom: 3px solid ${({ isActive, theme }) => isActive ? theme.primary : 'transparent'};
-  margin-bottom: -1px; /* Alinha a borda com a borda do contêiner */
-  transition: all 0.2s ease-in-out;
+  transition: all 0.7s ease;
+  margin-bottom: -1px;
 
   &:hover {
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 
 const TabContent = styled.div`
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.7s ease-in-out;
 `;
 
 const CategoryHeader = styled.h4`
@@ -70,6 +74,7 @@ const CategoryHeader = styled.h4`
     margin-bottom: 0.5rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+    transition: all 0.7s ease;
 `;
 
 const ContentGrid = styled.div`
@@ -82,6 +87,7 @@ const ContentGrid = styled.div`
 const Card = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
   max-width: 100%;
   border-radius: 16px;
   padding: 2rem;
@@ -109,9 +115,11 @@ const CardTitle = styled.h3`
   margin: 0 0 1.5rem 0;
   padding-bottom: 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
 
   svg {
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -132,6 +140,7 @@ const Label = styled.label`
   color: ${({ theme }) => theme.text};
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
+  transition: all 0.7s ease;
 `;
 
 const Input = styled.input`
@@ -142,6 +151,7 @@ const Input = styled.input`
   border-radius: 8px;
   color: ${({ theme }) => theme.text};
   font-size: 1rem;
+  transition: all 0.7s ease;
 `;
 
 const Button = styled.button`
@@ -155,11 +165,12 @@ const Button = styled.button`
   font-size: 1rem;
   align-items: left;
   gap: 0.5rem;
-  transition: background-color 0.2s;
+  transition: all 0.7s ease;
   margin-top: 1rem;
 
   &:hover {
     background-color: ${({ theme }) => theme.primaryHover};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -175,22 +186,25 @@ const ApplianceItem = styled.li`
   align-items: center;
   padding: 1rem;
   border-radius: 8px;
-  transition: background-color 0.2s ease;
+  transition: all 0.7s ease;
 
   &:hover {
     background-color: ${({ theme }) => theme.bodySecondary};
+    transition: all 0.7s ease;
   }
 `;
 
 const ApplianceInfo = styled.div`
   strong {
     color: ${({ theme }) => theme.text};
+    transition: all 0.7s ease;
   }
   div {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     color: ${({ theme }) => theme.textSecondary};
+    transition: all 0.7s ease;
     font-size: 0.9em;
     margin-top: 0.25rem;
   }
@@ -200,6 +214,7 @@ const DeleteButton = styled.button`
   background: none;
   border: none;
   color: ${({ theme }) => theme.textSecondary};
+  transition: all 0.7s ease;
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 50%;
@@ -208,6 +223,7 @@ const DeleteButton = styled.button`
   &:hover {
     background-color: ${({ theme }) => theme.cardBg};
     color: #e53e3e;
+    transition: all 0.7s ease;
   }
 `;
 
@@ -231,13 +247,14 @@ const TipItem = styled.li`
   padding: 1rem 1.5rem;
   border-radius: 8px;
   font-weight: 500;
-  transition: color 0.2s ease;
+  transition: all 0.7s ease;
   line-height: 1.5;
 
   svg {
     flex-shrink: 0;
     margin-top: 3px;
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -247,6 +264,7 @@ const EmptyState = styled.div`
   color: ${({ theme }) => theme.textSecondary};
   border: 2px dashed ${({ theme }) => theme.borderColor};
   border-radius: 12px;
+  transition: all 0.7s ease;
   
   svg {
     width: 48px;
@@ -269,19 +287,23 @@ const EditButton = styled.button`
   padding: 0.5rem;
   border-radius: 50%;
   display: flex;
+  transition: all 0.7s ease;
 
   &:hover {
     background-color: ${({ theme }) => theme.cardBg};
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 
 const SecondaryButton = styled(Button)`
   background-color: ${({ theme }) => theme.secondary};
   margin-top: 0.5rem;
+  transition: all 0.7s ease;
 
   &:hover {
     background-color: ${({ theme }) => theme.secondaryHover};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -306,11 +328,12 @@ const ClearFilterButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.7s ease;
 
   &:hover {
     border-color: ${({ theme }) => theme.primary};
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -328,6 +351,7 @@ const SearchInput = styled.div`
     top: 50%;
     transform: translateY(-50%);
     color: ${({ theme }) => theme.textSecondary};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -339,6 +363,7 @@ const Select = styled.select`
   border-radius: 8px;
   color: ${({ theme }) => theme.text};
   font-size: 1rem;
+  transition: all 0.7s ease;
 `;
 
 const SummaryGrid = styled.div`
@@ -352,17 +377,20 @@ const SummaryItem = styled.div`
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
   
   span {
     display: block;
     color: ${({ theme }) => theme.textSecondary};
     margin-bottom: 0.5rem;
+    transition: all 0.7s ease;
   }
 
   strong {
     font-size: 2rem;
     font-weight: 700;
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 

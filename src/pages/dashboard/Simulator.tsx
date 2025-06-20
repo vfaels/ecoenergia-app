@@ -28,8 +28,8 @@ const SimulatorWrapper = styled.div`
 
 const Header = styled.header`
   margin-bottom: 2.5rem;
-  h1 { font-size: 2.5rem; font-weight: 800; color: ${({ theme }) => theme.text}; }
-  p { font-size: 1.2rem; color: ${({ theme }) => theme.textSecondary}; }
+  h1 { font-size: 2.5rem; font-weight: 800; color: ${({ theme }) => theme.text}; transition: all 0.7s ease;}
+  p { font-size: 1.2rem; color: ${({ theme }) => theme.textSecondary}; transition: all 0.7s ease;}
 `;
 
 const MainGrid = styled.div`
@@ -46,6 +46,7 @@ const MainGrid = styled.div`
 const Card = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
   border-radius: 16px;
   padding: 2rem;
 `;
@@ -59,6 +60,7 @@ const CardTitle = styled.h3`
   margin: 0 0 1.5rem 0;
   padding-bottom: 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
 `;
 
 const ApplianceSelectionList = styled.div`
@@ -70,6 +72,7 @@ const ApplianceSelectionList = styled.div`
 const ApplianceRow = styled.div<{ isSelected: boolean }>`
   background-color: ${({ isSelected, theme }) => isSelected ? theme.bodySecondary : 'transparent'};
   border: 1px solid ${({ isSelected, theme }) => isSelected ? theme.primary : theme.borderColor};
+  transition: all 0.7s ease;
   border-radius: 12px;
   padding: 1.5rem;
   display: grid;
@@ -90,11 +93,13 @@ const ApplianceDetails = styled.div`
     gap: 0.5rem; 
     font-size: 1.1rem; 
     color: ${({ theme }) => theme.text}; 
+    transition: all 0.7s ease;
   }
   
   span { 
     font-size: 0.9rem; 
     color: ${({ theme }) => theme.textSecondary}; 
+    transition: all 0.7s ease;
     margin-top: 0.25rem;
   }
 `;
@@ -102,6 +107,7 @@ const ApplianceDetails = styled.div`
 const Checkbox = styled.div`
   cursor: pointer;
   color: ${({ theme }) => theme.primary};
+  transition: all 0.7s ease;
 `;
 
 const UsageInputs = styled.div`
@@ -117,13 +123,14 @@ const UsageInputs = styled.div`
     border: 1px solid ${({ theme }) => theme.borderColor};
     background-color: ${({ theme }) => theme.body};
     color: ${({ theme }) => theme.text};
+    transition: all 0.7s ease;
     text-align: center;
   }
 `;
 
 const ResultsCard = styled(Card)`
   position: sticky;
-  top: 90px; /* Altura da Topbar + um pouco de espaço */
+  top: 90px;
 `;
 
 const ResultItem = styled.div`
@@ -135,11 +142,11 @@ const ResultItem = styled.div`
     margin-top: 1.5rem;
   }
 
-  svg { color: ${({ theme }) => theme.primary}; flex-shrink: 0; }
+  svg { color: ${({ theme }) => theme.primary}; flex-shrink: 0; transition: all 0.7s ease;}
   
   div {
-    strong { font-size: 1.5rem; color: ${({ theme }) => theme.text}; display: block; }
-    span { color: ${({ theme }) => theme.textSecondary}; }
+    strong { font-size: 1.5rem; color: ${({ theme }) => theme.text}; display: block;transition: all 0.7s ease; }
+    span { color: ${({ theme }) => theme.textSecondary};transition: all 0.7s ease; }
   }
 `;
 
