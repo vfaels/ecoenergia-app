@@ -1,8 +1,6 @@
-// src/styles/GlobalStyle.ts
 import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
-  /* Reset Básico */
   * {
     margin: 0;
     padding: 0;
@@ -10,11 +8,14 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    background: ${({ theme }) => theme.body}; /* Usa a cor do body do tema ativo */
-    color: ${({ theme }) => theme.text}; /* Usa a cor de texto do tema ativo */
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', sans-serif;
+    background-color: ${({ theme }) => theme.body};
+    color: ${({ theme }) => theme.text};
+    -webkit-font-smoothing: antialiased;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* Outros estilos globais que você queira adicionar */
+  button, a {
+    cursor: pointer;
+  }
 `;
