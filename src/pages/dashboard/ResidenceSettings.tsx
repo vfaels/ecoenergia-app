@@ -1,12 +1,15 @@
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import styled from 'styled-components';
-import { Home, Zap, Edit, PlusCircle, HelpCircle, Sticker, BookOpen, Search, Trash2, X, Settings } from 'lucide-react';
+import { Home, Zap, Edit, PlusCircle, HelpCircle, Sticker, BookOpen, Search, Trash2, X, Settings, MapPin, DollarSign, DoorOpen, Target, Users } from 'lucide-react';
 import api from '../../services/api';
 
 interface Residence {
     residents: number;
     rooms: number;
     kwh_cost: number;
+    monthly_goal_kwh: number;
+    city: string;
+    state: string;
 }
 interface Appliance {
   id: number;
@@ -132,6 +135,16 @@ const Form = styled.form`
 
 const FormGroup = styled.div`
   margin-bottom: 1rem;
+
+`;
+
+const FormRow = styled.div`
+  display: flex;
+  gap: 2rem;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+  }
 `;
 
 const Label = styled.label`
@@ -368,45 +381,84 @@ const Select = styled.select`
 
 const SummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2rem;
+  gap: 1rem;
+  
+  /* 3 colunas em telas grandes */
+  grid-template-columns: repeat(3, 1fr);
+
+  /* 2 colunas em telas médias */
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 1 coluna em telas pequenas */
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const SummaryItem = styled.div`
-  background-color: ${({ theme }) => theme.body};
+  background-color: ${({ theme }) => theme.bodySecondary};
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid ${({ theme }) => theme.borderColor};
   transition: all 0.7s ease;
-  
+
   span {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: ${({ theme }) => theme.textSecondary};
     margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
     transition: all 0.7s ease;
   }
 
   strong {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
-    color: ${({ theme }) => theme.primary};
+    color: ${({ theme }) => theme.text};
     transition: all 0.7s ease;
   }
 `;
+
+const brazilianStates = [
+  { value: 'AC', label: 'Acre' }, { value: 'AL', label: 'Alagoas' },
+  { value: 'AP', label: 'Amapá' }, { value: 'AM', label: 'Amazonas' },
+  { value: 'BA', label: 'Bahia' }, { value: 'CE', label: 'Ceará' },
+  { value: 'DF', label: 'Distrito Federal' }, { value: 'ES', label: 'Espírito Santo' },
+  { value: 'GO', label: 'Goiás' }, { value: 'MA', label: 'Maranhão' },
+  { value: 'MT', label: 'Mato Grosso' }, { value: 'MS', label: 'Mato Grosso do Sul' },
+  { value: 'MG', label: 'Minas Gerais' }, { value: 'PA', label: 'Pará' },
+  { value: 'PB', label: 'Paraíba' }, { value: 'PR', label: 'Paraná' },
+  { value: 'PE', label: 'Pernambuco' }, { value: 'PI', label: 'Piauí' },
+  { value: 'RJ', label: 'Rio de Janeiro' }, { value: 'RN', label: 'Rio Grande do Norte' },
+  { value: 'RS', label: 'Rio Grande do Sul' }, { value: 'RO', label: 'Rondônia' },
+  { value: 'RR', label: 'Roraima' }, { value: 'SC', label: 'Santa Catarina' },
+  { value: 'SP', label: 'São Paulo' }, { value: 'SE', label: 'Sergipe' },
+  { value: 'TO', label: 'Tocantins' }
+];
 
 
 export const ResidenceSettings = () => {
   const [activeTab, setActiveTab] = useState('geral');
   const [allAppliances, setAllAppliances] = useState<Appliance[]>([]);
-  const [residence, setResidence] = useState<Residence>({ residents: 0, rooms: 0, kwh_cost: 0 });
+
+  const [residence, setResidence] = useState<Residence>({ 
+    residents: 0, 
+    rooms: 0, 
+    kwh_cost: 0, 
+    monthly_goal_kwh: 0,
+    city: '', 
+    state: '' 
+  });
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-  
   const [name, setName] = useState('');
   const [power, setPower] = useState('');
   const [category, setCategory] = useState('Outros');
-  
   const [editingAppliance, setEditingAppliance] = useState<Appliance | null>(null);
 
   const applianceCategories = ['Todos', 'Cozinha', 'Sala', 'Quarto', 'Lavanderia', 'Escritório', 'Outros'];
@@ -421,7 +473,8 @@ export const ResidenceSettings = () => {
       const groupedData: GroupedAppliances = appliancesRes.data;
       const flatList = Object.values(groupedData).flat();
       setAllAppliances(flatList);
-      setResidence(residenceRes.data);
+
+      setResidence(prev => ({ ...prev, ...residenceRes.data }));
     } catch (error) {
       console.error("Erro ao buscar dados da página:", error);
     }
@@ -444,15 +497,19 @@ export const ResidenceSettings = () => {
     }, {});
   }, [allAppliances, searchTerm, selectedCategory]);
 
-  const handleResidenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResidenceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setResidence(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+    if (name === 'city' || name === 'state') {
+        setResidence(prev => ({ ...prev, [name]: value }));
+    } else {
+        setResidence(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+    }
   };
   
   const handleUpdateResidence = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      await api.put('/residence/me', residence);
+      await api.put('/residence/me', residence); 
       alert('Configurações da residência salvas com sucesso!');
       fetchData();
     } catch (error) {
@@ -520,49 +577,79 @@ export const ResidenceSettings = () => {
       <TabContent>
 
         {activeTab === 'geral' && (
-          <Card>
-            <CardTitle><Home /> Resumo da Residência</CardTitle>
-            <SummaryGrid>
-              <SummaryItem>
-                <span>Moradores</span>
-                <strong>{residence.residents}</strong>
-              </SummaryItem>
-              <SummaryItem>
-                <span>Cômodos</span>
-                <strong>{residence.rooms}</strong>
-              </SummaryItem>
-              <SummaryItem>
-                <span>Custo do kWh</span>
-                <strong>R$ {Number(residence.kwh_cost).toFixed(4)}</strong>
-              </SummaryItem>
-              <SummaryItem>
-                <span>Aparelhos Cadastrados</span>
-                <strong>{allAppliances.length}</strong>
-              </SummaryItem>
-            </SummaryGrid>
-          </Card>
+            <Card>
+                <CardTitle><Home /> Resumo da Residência</CardTitle>
+                <SummaryGrid>
+                    <SummaryItem>
+                        <span><MapPin size={16}/> Localização</span>
+                        <strong>{residence.city ? `${residence.city}, ${residence.state}` : 'Não informado'}</strong>
+                    </SummaryItem>
+                    <SummaryItem>
+                        <span><Users size={16}/> Moradores</span>
+                        <strong>{residence.residents}</strong>
+                    </SummaryItem>
+                    <SummaryItem>
+                        <span><DoorOpen size={16}/> Cômodos</span>
+                        <strong>{residence.rooms}</strong>
+                    </SummaryItem>
+                    <SummaryItem>
+                        <span><DollarSign size={16}/> Custo do kWh</span>
+                        <strong>R$ {Number(residence.kwh_cost).toFixed(4)}</strong>
+                    </SummaryItem>
+                    <SummaryItem>
+                        <span><Target size={16}/> Meta Mensal</span>
+                        <strong>{residence.monthly_goal_kwh} kWh</strong>
+                    </SummaryItem>
+                    <SummaryItem>
+                        <span><Zap size={16}/> Aparelhos</span>
+                        <strong>{allAppliances.length}</strong>
+                    </SummaryItem>
+                </SummaryGrid>
+            </Card>
         )}
 
         {activeTab === 'configuracoes' && (
           <Card>
             <CardTitle><Settings />Configurações Gerais</CardTitle>
             <Form onSubmit={handleUpdateResidence}>
-                <FormGroup>
-                    <Label htmlFor="residents">Moradores</Label>
-                    <Input id="residents" name="residents" type="number" value={residence.residents} onChange={handleResidenceChange} />
-                </FormGroup>
-                <FormGroup>
-                    <Label htmlFor="rooms">Cômodos</Label>
-                    <Input id="rooms" name="rooms" type="number" value={residence.rooms} onChange={handleResidenceChange} />
-                </FormGroup>
-                <FormGroup>
-                    <Label htmlFor="kwh_cost">Custo por kWh (R$)</Label>
-                    <Input id="kwh_cost" name="kwh_cost" type="number" step="0.01" value={residence.kwh_cost} onChange={handleResidenceChange} />
-                </FormGroup>
+                <FormRow>
+                    <FormGroup>
+                        <Label htmlFor="city">Cidade</Label>
+                        <Input id="city" name="city" type="text" placeholder="Ex: Boa Vista" value={residence.city || ''} onChange={handleResidenceChange} />
+                    </FormGroup>
+                    <FormGroup>
+                        <Label htmlFor="state">Estado</Label>
+                        <Select id="state" name="state" value={residence.state || ''} onChange={handleResidenceChange}>
+                            <option value="" disabled>Selecione seu estado</option>
+                            {brazilianStates.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        </Select>
+                    </FormGroup>
+                </FormRow>
+                <FormRow>
+                    <FormGroup>
+                        <Label htmlFor="residents">Moradores</Label>
+                        <Input id="residents" name="residents" type="number" value={residence.residents || 0} onChange={handleResidenceChange} />
+                    </FormGroup>
+                    <FormGroup>
+                        <Label htmlFor="rooms">Cômodos</Label>
+                        <Input id="rooms" name="rooms" type="number" value={residence.rooms || 0} onChange={handleResidenceChange} />
+                    </FormGroup>
+                </FormRow>
+                <FormRow>
+                    <FormGroup>
+                        <Label htmlFor="kwh_cost">Custo por kWh (R$)</Label>
+                        <Input id="kwh_cost" name="kwh_cost" type="number" step="0.0001" value={residence.kwh_cost || 0} onChange={handleResidenceChange} />
+                    </FormGroup>
+                    <FormGroup>
+                        <Label htmlFor="monthly_goal_kwh">Meta Mensal (kWh)</Label>
+                        <Input id="monthly_goal_kwh" name="monthly_goal_kwh" type="number" value={residence.monthly_goal_kwh || 0} onChange={handleResidenceChange} />
+                    </FormGroup>
+                </FormRow>
                 <Button type="submit">Salvar Configurações</Button>
             </Form>
           </Card>
         )}
+
         {activeTab === 'aparelhos' && (
           <ContentGrid>
             <aside>

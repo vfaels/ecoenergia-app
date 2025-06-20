@@ -5,7 +5,7 @@ exports.getResidenceData = async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      'SELECT residents, rooms, kwh_cost, monthly_goal_kwh, city, state FROM residences WHERE user_id = $1', 
+      'SELECT id, residents, rooms, kwh_cost, monthly_goal_kwh, city, state FROM residences WHERE user_id = $1', 
       [userId]
     );
 
@@ -22,16 +22,18 @@ exports.getResidenceData = async (req, res) => {
 
 exports.updateResidenceSettings = async (req, res) => {
     const userId = req.userId;
-    const { residents, rooms, kwh_cost } = req.body;
+    const { residents, rooms, kwh_cost, monthly_goal_kwh, city, state } = req.body;
 
-    if (residents === undefined || rooms === undefined || kwh_cost === undefined) {
-        return res.status(400).send({ message: 'Todos os campos (moradores, cômodos, custo por kWh) são obrigatórios.' });
+    if (!residents || !rooms || !kwh_cost || !monthly_goal_kwh || !city || !state) {
+        return res.status(400).send({ message: 'Todos os campos são obrigatórios.' });
     }
 
     try {
         const { rows } = await db.query(
-            'UPDATE residences SET residents = $1, rooms = $2, kwh_cost = $3 WHERE user_id = $4 RETURNING *',
-            [residents, rooms, kwh_cost, userId]
+            `UPDATE residences 
+             SET residents = $1, rooms = $2, kwh_cost = $3, monthly_goal_kwh = $4, city = $5, state = $6 
+             WHERE user_id = $7 RETURNING *`,
+            [residents, rooms, kwh_cost, monthly_goal_kwh, city, state, userId]
         );
 
         if (rows.length === 0) {
