@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react'; 
 import styled from 'styled-components';
 import { 
   Calculator, Zap, Calendar, DollarSign, CheckSquare, Square, 
@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 
-// --- Tipagens ---
+// --- Tipagens  ---
 interface Appliance {
   id: number;
   name: string;
@@ -63,23 +63,51 @@ const CardTitle = styled.h3`
   transition: all 0.7s ease;
 `;
 
+const SelectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.7s ease;
+
+  label {
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+`;
+
 const ApplianceSelectionList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 `;
 
+
 const ApplianceRow = styled.div<{ isSelected: boolean }>`
-  background-color: ${({ isSelected, theme }) => isSelected ? theme.bodySecondary : 'transparent'};
+  background-color: ${({ isSelected, theme }) => isSelected ? `${theme.primary}15` : 'transparent'};
   border: 1px solid ${({ isSelected, theme }) => isSelected ? theme.primary : theme.borderColor};
-  transition: all 0.7s ease;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   display: grid;
-  grid-template-columns: auto 1fr 1fr;
+  grid-template-columns: auto 1fr;
   gap: 1.5rem;
   align-items: center;
   transition: all 0.2s ease-in-out;
+
+  ${({ isSelected }) => isSelected && `
+    grid-template-columns: auto 1fr 1fr;
+  `}
 `;
 
 const ApplianceDetails = styled.div`
@@ -173,6 +201,8 @@ const Simulator = () => {
   const [simulationInputs, setSimulationInputs] = useState<SimulationState>({});
   const [kwhCost, setKwhCost] = useState(0.75);
 
+  const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -191,6 +221,16 @@ const Simulator = () => {
     };
     fetchData();
   }, []);
+
+  const selectedCount = Object.keys(simulationInputs).length;
+  const areAllSelected = allAppliances.length > 0 && selectedCount === allAppliances.length;
+  const areSomeSelected = selectedCount > 0 && !areAllSelected;
+
+  useEffect(() => {
+    if (selectAllCheckboxRef.current) {
+      selectAllCheckboxRef.current.indeterminate = areSomeSelected;
+    }
+  }, [areSomeSelected]);
 
   const handleSelectionChange = (applianceId: number) => {
     setSimulationInputs(prev => {
@@ -215,6 +255,18 @@ const Simulator = () => {
     }));
   };
 
+  const handleSelectAllChange = () => {
+    if (areAllSelected) {
+      setSimulationInputs({});
+    } else {
+      const allSelected = allAppliances.reduce((acc, appliance) => {
+        acc[appliance.id] = { hoursPerDay: 1, daysPerWeek: 7 };
+        return acc;
+      }, {} as SimulationState);
+      setSimulationInputs(allSelected);
+    }
+  };
+
   const simulationResults = useMemo(() => {
     let totalKwhPerMonth = 0;
 
@@ -225,7 +277,7 @@ const Simulator = () => {
       if (appliance && inputs) {
         const kwhPerDay = (appliance.power_watts * inputs.hoursPerDay) / 1000;
         const kwhPerWeek = kwhPerDay * inputs.daysPerWeek;
-        const kwhPerMonth = kwhPerWeek * 4.345; // Média de semanas em um mês
+        const kwhPerMonth = kwhPerWeek * 4.345;
         totalKwhPerMonth += kwhPerMonth;
       }
     }
@@ -247,7 +299,21 @@ const Simulator = () => {
       <MainGrid>
         <Card>
           <CardTitle>Selecione os Aparelhos</CardTitle>
-          <ApplianceSelectionList>
+
+          <SelectionHeader>
+            <input
+              type="checkbox"
+              id="select-all"
+              ref={selectAllCheckboxRef}
+              checked={areAllSelected}
+              onChange={handleSelectAllChange}
+            />
+            <label htmlFor="select-all">
+              {areAllSelected ? 'Desmarcar Todos' : 'Selecionar Todos'}
+            </label>
+          </SelectionHeader>
+
+           <ApplianceSelectionList>
             {allAppliances.map(appliance => {
               const isSelected = !!simulationInputs[appliance.id];
               return (
