@@ -6,21 +6,18 @@ import { User, Settings, Moon, Sun, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/authContext';
 import { useTheme } from '../../contexts/themeContext';
 
-// --- Componentes Estilizados (Corrigidos e Limpos) ---
-
 const TopbarContainer = styled.header`
   height: 70px;
   background-color: ${({ theme }) => theme.cardBg};
   border-bottom: 1px solid ${({ theme }) => theme.borderColor};
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* Alinha o menu do usuário à direita */
+  justify-content: flex-end;
   padding: 0 2rem;
   position: relative;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 `;
 
-// Container para o botão e o dropdown, para o posicionamento relativo funcionar
 const MenuWrapper = styled.div`
   position: relative;
 `;
@@ -66,7 +63,7 @@ const AvatarFallback = styled.div`
 
 const DropdownMenu = styled.div`
   position: absolute;
-  top: 60px; /* Ajuste para melhor posicionamento */
+  top: 60px;
   right: 0;
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
@@ -119,7 +116,7 @@ const DropdownButton = styled.button`
   padding: 0.75rem 1rem;
   font-size: 0.9rem;
   color: ${({ theme }) => theme.textSecondary};
-  text-align: left; /* Garante que o texto fique alinhado */
+  text-align: left;
 
   &:hover {
     background-color: ${({ theme }) => theme.bodySecondary};
@@ -138,15 +135,12 @@ const Separator = styled.hr`
   margin: 0.5rem 0;
 `;
 
-// --- Componente ---
-
 export const Topbar = () => {
   const { user, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { themeName, toggleTheme } = useTheme();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Efeito para fechar o dropdown ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -165,7 +159,6 @@ export const Topbar = () => {
         <UserMenuButton onClick={() => setDropdownOpen(!isDropdownOpen)}>
           <UserName>{user?.name || 'Usuário'}</UserName>
           
-          {/* Lógica do Avatar Dinâmico */}
           {user?.avatar_url ? (
             <AvatarImage src={user.avatar_url} alt="Avatar do usuário" />
           ) : (
@@ -186,10 +179,12 @@ export const Topbar = () => {
             <span>Configurações</span>
           </DropdownLink>
           <Separator />
+
           <DropdownButton onClick={toggleTheme}>
-            {(theme === 'light' || theme?.mode === 'light') ? <Moon /> : <Sun />}
-            <span>Modo {(theme === 'light' || theme?.mode === 'light') ? 'Escuro' : 'Claro'}</span>
+            {themeName === 'light' ? <Moon /> : <Sun />}
+            <span>Modo {themeName === 'light' ? 'Escuro' : 'Claro'}</span>
           </DropdownButton>
+          
           <DropdownButton onClick={() => {
             signOut();
             setDropdownOpen(false);

@@ -253,12 +253,31 @@ const AccountSettings = () => {
 
   if (authLoading) return <p>Carregando...</p>;
 
+  const handleAvatarRemove = async () => {
+    if (!user || !window.confirm("Tem certeza que deseja remover sua foto de perfil?")) {
+      return;
+    }
+
+    try {
+      const response = await api.delete('/users/me/avatar');
+      
+      updateUser(response.data);
+      
+      alert('Foto de perfil removida com sucesso!');
+    } catch (error) {
+      console.error("Erro ao remover a foto:", error);
+      alert("Falha ao remover a foto de perfil. Tente novamente.");
+    }
+  };
+
+  if (authLoading) return <p>Carregando...</p>;
+
   return (
     <SettingsWrapper>
       <Header>
         <h1>Configurações da Conta</h1>
       </Header>
-      
+
       <AvatarSection>
         <SectionTitle>Foto de Perfil</SectionTitle>
         <AvatarWrapper>
@@ -276,15 +295,25 @@ const AccountSettings = () => {
             id="avatar-upload"
             type="file"
             accept="image/png, image/jpeg"
-            onChange={handleAvatarChange}
-          />
+            onChange={handleAvatarChange} />
         </AvatarWrapper>
-        
+
         {avatarFile && (
           <Button className="primary" onClick={handleAvatarUpload}>Salvar Nova Foto</Button>
         )}
+
+        {user?.avatar_url && !avatarFile && (
+          <Button
+            type="button"
+            className="secondary"
+            onClick={handleAvatarRemove}
+            style={{ borderColor: '#ef4444', color: '#ef4444' }} 
+          >
+            Remover Foto
+          </Button>
+        )}
       </AvatarSection>
-      
+
       <Form onSubmit={handleInfoSubmit}>
         <Section>
           <SectionTitle>Informações Pessoais</SectionTitle>
@@ -298,29 +327,28 @@ const AccountSettings = () => {
           </FormGroup>
         </Section>
         <ButtonGroup>
-            <Button type="button" className="secondary" onClick={() => navigate('/app/perfil')}>Cancelar</Button>
-            <Button type="submit" className="primary">Salvar Alterações</Button>
+          <Button type="button" className="secondary" onClick={() => navigate('/app/perfil')}>Cancelar</Button>
+          <Button type="submit" className="primary">Salvar Alterações</Button>
         </ButtonGroup>
       </Form>
-      
       <Form onSubmit={handlePasswordSubmit} style={{ marginTop: '2rem' }}>
         <Section>
-            <SectionTitle>Alterar Senha</SectionTitle>
-            <FormGroup>
-                <Label htmlFor="currentPassword">Senha Atual</Label>
-                <Input id="currentPassword" name="currentPassword" type="password" value={passwordData.currentPassword} onChange={handlePasswordChange} />
-            </FormGroup>
-            <FormGroup>
-                <Label htmlFor="newPassword">Nova Senha</Label>
-                <Input id="newPassword" name="newPassword" type="password" value={passwordData.newPassword} onChange={handlePasswordChange} />
-            </FormGroup>
-            <FormGroup>
-                <Label htmlFor="confirmNewPassword">Confirmar Nova Senha</Label>
-                <Input id="confirmNewPassword" name="confirmNewPassword" type="password" value={passwordData.confirmNewPassword} onChange={handlePasswordChange} />
-            </FormGroup>
+          <SectionTitle>Alterar Senha</SectionTitle>
+          <FormGroup>
+            <Label htmlFor="currentPassword">Senha Atual</Label>
+            <Input id="currentPassword" name="currentPassword" type="password" value={passwordData.currentPassword} onChange={handlePasswordChange} />
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="newPassword">Nova Senha</Label>
+            <Input id="newPassword" name="newPassword" type="password" value={passwordData.newPassword} onChange={handlePasswordChange} />
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="confirmNewPassword">Confirmar Nova Senha</Label>
+            <Input id="confirmNewPassword" name="confirmNewPassword" type="password" value={passwordData.confirmNewPassword} onChange={handlePasswordChange} />
+          </FormGroup>
         </Section>
         <ButtonGroup>
-            <Button type="submit" className="primary">Alterar Senha</Button>
+          <Button type="submit" className="primary">Alterar Senha</Button>
         </ButtonGroup>
       </Form>
     </SettingsWrapper>
