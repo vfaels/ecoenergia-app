@@ -5,8 +5,6 @@ import { Zap, DollarSign, BarChartHorizontal } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../contexts/themeContext';
 
-
-
 interface HistoryData { date: string; kwh: number; }
 interface ResidenceConfig { kwh_cost: number; }
 
@@ -51,7 +49,6 @@ const ChartCard = styled.div`
   height: 400px;
 `;
 
-
 const Header = styled.header`
   margin-bottom: 2.5rem;
   h1 {
@@ -71,7 +68,7 @@ const History = () => {
   const { theme } = useTheme();
   const [history, setHistory] = useState<HistoryData[]>([]);
   const [config, setConfig] = useState<ResidenceConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [,setLoading] = useState(true);
   const [activePeriod, setActivePeriod] = useState('30d'); 
 
   useEffect(() => {
@@ -106,8 +103,6 @@ const History = () => {
     kwh: Number(d.kwh)
   }));
 
-  if (loading) return <PageWrapper><p>Carregando...</p></PageWrapper>;
-
   return (
     <PageWrapper>
       <Header><h1>Histórico de Consumo</h1><p>Analise detalhada do seu consumo ao longo do tempo.</p></Header>
@@ -126,7 +121,7 @@ const History = () => {
 
       <ChartCard>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={formattedChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+          <LineChart data={formattedChartData} margin={{ top: 5, right: 20, left: 0, bottom: -15 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.borderColor}/>
             <XAxis dataKey="date" tick={{ fill: theme.textSecondary }} />
             <YAxis unit=" kWh" tick={{ fill: theme.textSecondary }} />

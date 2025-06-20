@@ -1,18 +1,9 @@
 // src/pages/dashboard/Profile.tsx
-import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { User, Mail, Edit } from 'lucide-react';
+import { User, Mail, Edit, UserCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import api from '../../services/api';
+import { useAuth } from '../../contexts/authContext';
 
-// --- Tipagem para o Usuário ---
-interface UserProfile {
-  name: string;
-  email: string;
-  avatarUrl?: string; // Opcional, caso queira adicionar no futuro
-}
-
-// --- Componentes Estilizados ---
 const ProfileWrapper = styled.div`
   animation: fadeIn 0.5s ease-in-out;
 `;
@@ -47,12 +38,41 @@ const EditProfileButton = styled(Link)`
   }
 `;
 
+const AvatarContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+`;
+
+const AvatarImage = styled.img`
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid ${({ theme }) => theme.primary};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+const AvatarFallback = styled.div`
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background-color: ${({ theme }) => theme.cardBg};
+  border: 4px solid ${({ theme }) => theme.borderColor};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.textSecondary};
+`;
+
 const ProfileCard = styled.div`
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
   border-radius: 12px;
   padding: 2.5rem;
   max-width: 700px;
+  margin: 0 auto; // Centraliza o card
 `;
 
 const InfoRow = styled.div`
@@ -97,26 +117,10 @@ const LoadingState = styled.div`
 `;
 
 // --- Componente da Página ---
+
 const Profile = () => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      setLoading(true);
-      try {
-        // O db.json tem um objeto "user"
-        const response = await api.get('/user');
-        setUser(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <LoadingState>Carregando perfil...</LoadingState>;
@@ -135,6 +139,16 @@ const Profile = () => {
           Editar Perfil
         </EditProfileButton>
       </Header>
+
+      <AvatarContainer>
+        {user.avatar_url ? (
+          <AvatarImage src={user.avatar_url} alt="Foto de Perfil" />
+        ) : (
+          <AvatarFallback>
+            <UserCircle2 size={80} />
+          </AvatarFallback>
+        )}
+      </AvatarContainer>
 
       <ProfileCard>
         <InfoRow>

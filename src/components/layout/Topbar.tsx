@@ -6,16 +6,23 @@ import { User, Settings, Moon, Sun, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/authContext';
 import { useTheme } from '../../contexts/themeContext';
 
+// --- Componentes Estilizados (Corrigidos e Limpos) ---
+
 const TopbarContainer = styled.header`
   height: 70px;
   background-color: ${({ theme }) => theme.cardBg};
   border-bottom: 1px solid ${({ theme }) => theme.borderColor};
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-end; /* Alinha o menu do usuário à direita */
   padding: 0 2rem;
   position: relative;
   transition: background-color 0.3s ease, border-color 0.3s ease;
+`;
+
+// Container para o botão e o dropdown, para o posicionamento relativo funcionar
+const MenuWrapper = styled.div`
+  position: relative;
 `;
 
 const UserMenuButton = styled.button`
@@ -34,22 +41,33 @@ const UserMenuButton = styled.button`
   }
 `;
 
-const Avatar = styled.img`
+const UserName = styled.span`
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+`;
+
+const AvatarImage = styled.img`
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
 `;
 
-const UserName = styled.span`
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
+const AvatarFallback = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: ${({ theme }) => theme.primary};
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const DropdownMenu = styled.div`
   position: absolute;
-  top: 65px;
-  right: 2rem;
+  top: 60px; /* Ajuste para melhor posicionamento */
+  right: 0;
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
   border-radius: 8px;
@@ -70,7 +88,7 @@ const DropdownMenu = styled.div`
   }
 `;
 
-const DropdownItem = styled(Link)`
+const DropdownLink = styled(Link)`
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -101,8 +119,8 @@ const DropdownButton = styled.button`
   padding: 0.75rem 1rem;
   font-size: 0.9rem;
   color: ${({ theme }) => theme.textSecondary};
-  text-decoration: none;
-  
+  text-align: left; /* Garante que o texto fique alinhado */
+
   &:hover {
     background-color: ${({ theme }) => theme.bodySecondary};
     color: ${({ theme }) => theme.text};
@@ -120,12 +138,15 @@ const Separator = styled.hr`
   margin: 0.5rem 0;
 `;
 
+// --- Componente ---
+
 export const Topbar = () => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Efeito para fechar o dropdown ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -140,25 +161,34 @@ export const Topbar = () => {
 
   return (
     <TopbarContainer>
-      <div ref={dropdownRef}>
+      <MenuWrapper ref={dropdownRef}>
         <UserMenuButton onClick={() => setDropdownOpen(!isDropdownOpen)}>
           <UserName>{user?.name || 'Usuário'}</UserName>
-          <Avatar src="https://avatars.githubusercontent.com/u/89363396?v=4&size=64" alt="Avatar do usuário" />
+          
+          {/* Lógica do Avatar Dinâmico */}
+          {user?.avatar_url ? (
+            <AvatarImage src={user.avatar_url} alt="Avatar do usuário" />
+          ) : (
+            <AvatarFallback>
+              <User size={24} />
+            </AvatarFallback>
+          )}
+
         </UserMenuButton>
 
         <DropdownMenu className={isDropdownOpen ? 'active' : ''}>
-          <DropdownItem to="/app/perfil" onClick={() => setDropdownOpen(false)}>
+          <DropdownLink to="/app/perfil" onClick={() => setDropdownOpen(false)}>
             <User />
             <span>Perfil</span>
-          </DropdownItem>
-          <DropdownItem to="/app/conta/configuracoes" onClick={() => setDropdownOpen(false)}>
+          </DropdownLink>
+          <DropdownLink to="/app/conta/configuracoes" onClick={() => setDropdownOpen(false)}>
             <Settings />
-            <span>Configurações da Conta</span>
-          </DropdownItem>
+            <span>Configurações</span>
+          </DropdownLink>
           <Separator />
           <DropdownButton onClick={toggleTheme}>
-            {theme === 'light' ? <Moon /> : <Sun />}
-            <span>Modo {theme === 'light' ? 'Escuro' : 'Claro'}</span>
+            {(theme === 'light' || theme?.mode === 'light') ? <Moon /> : <Sun />}
+            <span>Modo {(theme === 'light' || theme?.mode === 'light') ? 'Escuro' : 'Claro'}</span>
           </DropdownButton>
           <DropdownButton onClick={() => {
             signOut();
@@ -168,7 +198,8 @@ export const Topbar = () => {
             <span>Sair</span>
           </DropdownButton>
         </DropdownMenu>
-      </div>
+
+      </MenuWrapper>
     </TopbarContainer>
   );
 };

@@ -21,6 +21,8 @@ app.use('/api/tips', tipRoutes);
 app.use('/api/residence', residenceRoutes);
 app.use('/api/consumption', consumptionRoutes);
 app.use('/api/appliances', applianceRoutes);
+app.use('/uploads', express.static('uploads')); 
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor da API rodando na porta ${PORT}`);

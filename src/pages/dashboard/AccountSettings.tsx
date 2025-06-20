@@ -1,12 +1,16 @@
 // src/pages/dashboard/AccountSettings.tsx
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/authContext';
+import api from '../../services/api';
+import { User as UserIcon, Upload } from 'lucide-react';
 
-// --- Componentes Estilizados ---
+// --- Componentes Estilizados (Adicionados os que faltavam) ---
+
 const SettingsWrapper = styled.div`
   max-width: 800px;
+  margin: 0 auto;
   animation: fadeIn 0.5s ease-in-out;
 `;
 
@@ -24,6 +28,70 @@ const Form = styled.form`
   border: 1px solid ${({ theme }) => theme.borderColor};
   border-radius: 12px;
   padding: 2.5rem;
+`;
+
+// Estilos do Avatar (que estavam faltando)
+const AvatarSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: ${({ theme }) => theme.cardBg};
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  border-radius: 12px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+`;
+
+const AvatarWrapper = styled.div`
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 1rem;
+`;
+
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid ${({ theme }) => theme.primary};
+`;
+
+const AvatarFallback = styled.div`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: ${({ theme }) => theme.body};
+  border: 3px solid ${({ theme }) => theme.borderColor};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.textSecondary};
+`;
+
+const UploadLabel = styled.label`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: ${({ theme }) => theme.primary};
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px solid ${({ theme }) => theme.cardBg};
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
+
+const HiddenInput = styled.input`
+  display: none;
 `;
 
 const Section = styled.div`
@@ -105,42 +173,70 @@ const Button = styled.button`
   }
 `;
 
-// --- Componente da Página ---
+// --- Componente da Página Corrigido ---
 const AccountSettings = () => {
   const navigate = useNavigate();
+  const { user, updateUser, loading: authLoading } = useAuth();
+
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
-  const [loading, setLoading] = useState(true);
+  
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
 
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Popula o formulário com os dados do usuário do contexto
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await api.get('/user');
-        setFormData({ name: response.data.name, email: response.data.email });
-      } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUserData();
-  }, []);
+    if (user) {
+      setFormData({ name: user.name, email: user.email });
+      setAvatarPreview(user.avatar_url || null);
+    }
+  }, [user]);
 
   const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({ ...prev, [name]: value }));
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!avatarFile || !user) return;
+
+    const uploadFormData = new FormData();
+    uploadFormData.append('avatar', avatarFile);
+
+    try {
+      const response = await api.put('/users/me/avatar', uploadFormData);
+      
+      const updatedUser = { ...user, avatar_url: response.data.avatar_url };
+      updateUser(updatedUser); // Atualiza o contexto
+      setAvatarFile(null); // Limpa o arquivo para o botão sumir
+      alert('Avatar atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao fazer upload do avatar:', error);
+      alert('Falha ao atualizar o avatar.');
+      setAvatarPreview(user.avatar_url || null); // Reverte o preview
+    }
   };
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     try {
-      // Simula a atualização na API
-      await api.patch('/user', formData);
+      // ATENÇÃO: Verifique se você tem uma rota PUT /api/users/me no seu backend
+      const response = await api.put('/users/me', formData);
+      updateUser(response.data); // Atualiza o contexto com os novos dados
       alert('Informações atualizadas com sucesso!');
       navigate('/app/perfil');
     } catch (error) {
@@ -149,30 +245,45 @@ const AccountSettings = () => {
     }
   };
   
-  // A lógica de alteração de senha é mais complexa no back-end.
-  // Aqui, apenas simulamos a validação e o envio.
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-      alert('A nova senha e a confirmação não correspondem.');
-      return;
-    }
-    if (passwordData.newPassword.length < 6) {
-        alert('A nova senha deve ter pelo menos 6 caracteres.');
-        return;
-    }
-    alert('Funcionalidade de alterar senha a ser implementada.');
-    // Ex: await api.post('/user/change-password', passwordData);
-    console.log('Dados para alterar senha:', passwordData);
+    // A lógica de alteração de senha deve ser implementada no backend
+    alert('Funcionalidade de alterar senha ainda não implementada.');
   };
 
-  if (loading) return <p>Carregando...</p>;
+  if (authLoading) return <p>Carregando...</p>;
 
   return (
     <SettingsWrapper>
       <Header>
         <h1>Configurações da Conta</h1>
       </Header>
+      
+      <AvatarSection>
+        <SectionTitle>Foto de Perfil</SectionTitle>
+        <AvatarWrapper>
+          {avatarPreview ? (
+            <AvatarImage src={avatarPreview} alt="Avatar Preview" />
+          ) : (
+            <AvatarFallback>
+              <UserIcon size={48} />
+            </AvatarFallback>
+          )}
+          <UploadLabel htmlFor="avatar-upload">
+            <Upload size={16} />
+          </UploadLabel>
+          <HiddenInput
+            id="avatar-upload"
+            type="file"
+            accept="image/png, image/jpeg"
+            onChange={handleAvatarChange}
+          />
+        </AvatarWrapper>
+        
+        {avatarFile && (
+          <Button className="primary" onClick={handleAvatarUpload}>Salvar Nova Foto</Button>
+        )}
+      </AvatarSection>
       
       <Form onSubmit={handleInfoSubmit}>
         <Section>

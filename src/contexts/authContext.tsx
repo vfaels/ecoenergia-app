@@ -7,22 +7,24 @@ interface User {
   id: number;
   name: string;
   email: string;
+  avatar_url?: string;
   role: 'USER' | 'ADMIN';
 }
 
-interface AuthContextData {
+interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
   signIn: (credentials: { email: string; password: string }) => Promise<void>;
   signOut: () => void;
+  updateUser: (updatedUserData: User) => void;
 }
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
@@ -39,8 +41,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           setUser(JSON.parse(userData));
         } catch (error) {
-          console.error("Erro ao carregar dados do usuário:", error)
-          localStorage.clear();
+          console.error("Erro ao carregar dados do usuário:", error);
+          localStorage.clear(); 
         }
       }
       setLoading(false);
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     loadUserFromStorage();
   }, []);
-  
+
   const signIn = async ({ email, password }: { email: string; password: string }) => {
     try {
       const response = await api.post('/auth/login', {
@@ -66,7 +68,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(loggedUser);
       
       navigate('/app');
-
     } catch (error) {
       console.error('Falha no login:', error);
       alert('Email ou senha inválidos.');
@@ -84,13 +85,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     navigate('/login');
   };
 
+  const updateUser = (updatedUserData: User) => {
+    setUser(updatedUserData);
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
+  };
+  const isAuthenticated = !!user;
+
   return (
     <AuthContext.Provider value={{ 
-      isAuthenticated: !!user, 
+      isAuthenticated, 
       user, 
-      loading,
+      loading, 
       signIn, 
-      signOut 
+      signOut, 
+      updateUser 
     }}>
       {children}
     </AuthContext.Provider>
