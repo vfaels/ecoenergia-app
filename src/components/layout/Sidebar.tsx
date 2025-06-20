@@ -17,7 +17,7 @@ const SidebarContainer = styled.aside<{ $isCollapsed: boolean }>`
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  transition: width 0.7s ease-in-out;
+  transition: width 0.5s ease-in-out, background-color 0.7s ease, border-right 0.7s ease;
   position: relative;
 `;
 
@@ -26,7 +26,7 @@ const LogoContainer = styled(Link)`
   align-items: center;
   justify-content: center;
   margin-bottom: 3rem;
-  height: 90px; /* Altura fixa para alinhar o conteúdo */
+  height: 90px; 
   text-decoration: none;
 `;
 
@@ -63,6 +63,7 @@ const NavLink = styled(Link)<NavLinkProps>`
   overflow: hidden;
   color: ${({ theme, $isActive }) => ($isActive ? theme.text : theme.textSecondary)};
   background-color: transparent;
+  transition: color 0.7s ease;
 
   &::before {
     content: '';
@@ -74,12 +75,13 @@ const NavLink = styled(Link)<NavLinkProps>`
     width: 4px;
     background-color: ${({ theme }) => theme.primary};
     border-radius: 0 4px 4px 0;
-    transition: height 0.2s ease;
+    transition: height 0.2s ease, background-color 0.7s ease;
   }
 
   &:hover {
     background-color: ${({ theme }) => theme.bodySecondary};
     color: ${({ theme }) => theme.text};
+    transition: background-color 0.7s ease, color 0.7s ease;
   }
 
   svg {
@@ -87,7 +89,7 @@ const NavLink = styled(Link)<NavLinkProps>`
     width: 24px;
     height: 24px;
     color: ${({ theme, $isActive }) => ($isActive ? theme.primary : theme.textSecondary)};
-    transition: color 0.2s ease;
+    transition: color 0.7s ease;
   }
 
   ${({ $isCollapsed }) =>
@@ -119,7 +121,7 @@ const CollapseButton = styled.button<{ $isCollapsed: boolean }>`
   justify-content: center;
   cursor: pointer;
   z-index: 11;
-  transition: transform 0.3s ease, background-color 0.2s ease;
+  transition: transform 0.3s ease, background-color 0.7s ease;
 
   &:hover {
     background-color: ${({ theme }) => theme.primary};

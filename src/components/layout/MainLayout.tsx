@@ -7,6 +7,7 @@ const LayoutContainer = styled.div`
   display: flex;
   height: 100vh;
   background-color: ${({ theme }) => theme.body};
+  transition: background-color 0.5s ease;
 `;
 
 const MainContentWrapper = styled.div`

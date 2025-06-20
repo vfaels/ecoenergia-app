@@ -25,12 +25,14 @@ const TopbarContainer = styled.header`
   top: 0;
   z-index: 10;
   animation: ${fadeIn} 0.5s ease-out;
+  transition: background-color 0.7s ease, border-bottom: 0.7s ease;
 `;
 
 const PageTitle = styled.h1`
   font-size: 1.5rem;
   font-weight: 700;
   color: ${({ theme }) => theme.text};
+  transition: color 0.7s ease;
 `;
 
 const ActionsWrapper = styled.div`
@@ -50,10 +52,11 @@ const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.7s ease;
   &:hover {
     background-color: ${({ theme }) => theme.bodySecondary};
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -68,9 +71,10 @@ const AvatarImage = styled.img`
   object-fit: cover;
   cursor: pointer;
   border: 2px solid ${({ theme }) => theme.borderColor};
-  transition: border-color 0.2s ease;
+  transition: all 0.7s ease;
   &:hover {
     border-color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 `;
 
@@ -79,6 +83,7 @@ const AvatarFallback = styled.div`
   height: 42px;
   border-radius: 50%;
   background-color: ${({ theme }) => theme.primary};
+  transition: all 0.7s ease;
   color: white;
   display: flex;
   align-items: center;
@@ -94,6 +99,7 @@ const DropdownMenu = styled.div`
   width: 260px;
   background-color: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.borderColor};
+  transition: all 0.3s ease;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   z-index: 1000;
@@ -102,7 +108,6 @@ const DropdownMenu = styled.div`
   opacity: 0;
   transform: scale(0.95) translateY(-10px);
   visibility: hidden;
-  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
   &.active {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -116,17 +121,20 @@ const DropdownHeader = styled.div`
   flex-direction: column;
   border-bottom: 1px solid ${({ theme }) => theme.borderColor};
   margin-bottom: 0.5rem;
+  transition: all 0.7s ease;
 `;
 
 const DropdownUserName = styled.span`
   font-size: 1rem;
   font-weight: 600;
   color: ${({ theme }) => theme.text};
+  transition: all 0.7s ease;
 `;
 
 const DropdownUserEmail = styled.span`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.textSecondary};
+  transition: all 0.7s ease;
 `;
 
 const DropdownLink = styled(Link)`
@@ -136,11 +144,13 @@ const DropdownLink = styled(Link)`
   padding: 0.75rem 1.25rem;
   font-size: 0.9rem;
   color: ${({ theme }) => theme.textSecondary};
+  transition: all 0.7s ease;
   text-decoration: none;
   cursor: pointer;
   &:hover {
     background-color: ${({ theme }) => theme.bodySecondary};
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
   svg {
     width: 18px;
@@ -149,7 +159,6 @@ const DropdownLink = styled(Link)`
 `;
 
 const DropdownButton = styled.button`
-  /* Reset de estilos de botão */
   background: none;
   border: none;
   margin: 0;
@@ -157,19 +166,20 @@ const DropdownButton = styled.button`
   font: inherit;
   width: 100%;
   
-  /* Estilos do DropdownItem */
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
   font-size: 0.9rem;
   color: ${({ theme }) => theme.textSecondary};
+  transition: all 0.7s ease;
   text-decoration: none;
   cursor: pointer;
 
   &:hover {
     background-color: ${({ theme }) => theme.bodySecondary};
     color: ${({ theme }) => theme.primary};
+    transition: all 0.7s ease;
   }
 
   svg {
