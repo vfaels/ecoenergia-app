@@ -1,14 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type JSX } from "react";
 import { Link } from "react-router-dom";
+import styled, { keyframes } from "styled-components";
+import { 
+  Zap, DollarSign, Target, Home, Lightbulb, AlertCircle, Settings, ArrowRight,
+  ChefHat, Droplets, Bed, Tv, WashingMachine, Users, DoorOpen, Plug, MapPin
+} from "lucide-react";
 import { useAuth } from "../../contexts/authContext";
 import api from '../../services/api';
-import styled, { keyframes } from "styled-components";
-import { Zap, DollarSign, Target, Home, Lightbulb, AlertCircle, Settings, ArrowRight } from "lucide-react";
+
+// --- Interfaces e Tipagens ---
+interface Tip {
+  title: string;
+  description: string;
+  category: string;
+}
+
+interface Appliance {
+  id: number;
+  name: string;
+}
+
+type GroupedAppliances = Record<string, Appliance[]>;
 
 interface DashboardData {
   consumption: { current_month_kwh: number };
-  residence: { kwh_cost: number; monthly_goal_kwh: number; residents: number; rooms: number };
-  tip: { title: string; content: string };
+  residence: { 
+    kwh_cost: number; 
+    monthly_goal_kwh: number; 
+    residents: number; 
+    rooms: number;
+    city: string;
+    state: string;
+  };
+  tip: Tip;
+  appliances: GroupedAppliances; 
 }
 
 const fadeInUp = keyframes`
@@ -122,27 +147,6 @@ const ProgressFill = styled.div<{ percentage: number }>`
 
 `;
 
-const SummaryGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-`;
-
-const SummaryItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  
-  span {
-    color: ${({ theme }) => theme.textSecondary};
-    font-size: 0.9rem;
-  }
-  strong {
-    font-size: 1.2rem;
-    font-weight: 700;
-  }
-`;
-
 const StyledLink = styled(Link)`
   margin-top: auto; 
   font-weight: 600;
@@ -192,7 +196,80 @@ const ActionButton = styled(Link)`
   }
 `;
 
+const TipContentWrapper = styled.div`
+  flex-grow: 1; /* Faz este wrapper ocupar o espaço disponível */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const TipCategory = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textSecondary};
+  text-transform: uppercase;
+`;
+
+const TipTitle = styled.h4`
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin: 0;
+`;
+
+const TipDescription = styled.p`
+  font-size: 0.95rem;
+  color: ${({ theme }) => theme.textSecondary};
+  line-height: 1.6;
+  margin: 0;
+`;
+
+const InfoList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-grow: 1; /* Ocupa o espaço disponível no card */
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: ${({ theme }) => theme.textSecondary};
+  font-size: 0.95rem;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: ${({ theme }) => theme.primary};
+    flex-shrink: 0;
+  }
+
+  span {
+    flex-grow: 1;
+  }
+
+  strong {
+    font-size: 1rem;
+    font-weight: 600;
+    color: ${({ theme }) => theme.text};
+  }
+`;
+
 // --- Componente Principal ---
+
+const categoryIcons: { [key: string]: JSX.Element } = {
+  Geral: <Home size={14} />,
+  Cozinha: <ChefHat size={14} />,
+  Quarto: <Bed size={14} />,
+  Sala: <Tv size={14} />,
+  Banheiro: <Droplets size={14} />,
+  Lavanderia: <WashingMachine size={14} />,
+};
+
 const DashboardHome = () => {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -200,16 +277,20 @@ const DashboardHome = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return;
       try {
-        const [consumptionRes, residenceRes, tipsRes] = await Promise.all([
+        const [consumptionRes, residenceRes, tipsRes, appliancesRes] = await Promise.all([
           api.get('/consumption/summary'),
           api.get('/residence/me'),
-          api.get('/tips')
+          api.get('/tips'),
+          api.get('/appliances')
         ]);
+        
         setData({
           consumption: consumptionRes.data,
           residence: residenceRes.data,
-          tip: tipsRes.data[Math.floor(Math.random() * tipsRes.data.length)]
+          tip: tipsRes.data[Math.floor(Math.random() * tipsRes.data.length)],
+          appliances: appliancesRes.data
         });
       } catch (error) {
         console.error("Erro ao buscar dados do dashboard:", error);
@@ -217,24 +298,25 @@ const DashboardHome = () => {
         setLoading(false);
       }
     };
-    if (user) fetchData();
+    fetchData();
   }, [user]);
 
   if (loading) return <PageWrapper><p>Carregando dashboard...</p></PageWrapper>;
   if (!data) return <PageWrapper><p>Não foi possível carregar os dados.</p></PageWrapper>;
 
-  const { consumption, residence, tip } = data;
+  const { consumption, residence, tip, appliances } = data;
   const estimatedCost = consumption.current_month_kwh * residence.kwh_cost;
   const goalProgress = residence.monthly_goal_kwh > 0
     ? (consumption.current_month_kwh / residence.monthly_goal_kwh) * 100
     : 0;
   const isWithinGoal = consumption.current_month_kwh <= residence.monthly_goal_kwh;
 
+  const totalAppliances = Object.values(appliances).flat().length;
+
   return (
     <PageWrapper>
       <Title>Olá, {user?.name}!</Title>
       
-
       <Grid>
         <Card delay={0.1}>
           <CardHeader><Zap size={18} /> Consumo do Mês</CardHeader>
@@ -256,16 +338,48 @@ const DashboardHome = () => {
 
         <Card delay={0.4}>
           <CardHeader><Home size={18} /> Resumo da Residência</CardHeader>
-          <SummaryGrid>
-            <SummaryItem><span>Moradores</span><strong>{residence.residents}</strong></SummaryItem>
-            <SummaryItem><span>Cômodos</span><strong>{residence.rooms}</strong></SummaryItem>
-          </SummaryGrid>
+          <InfoList>
+            <InfoRow>
+              <MapPin />
+              <span>Localização</span>
+              <strong>{residence.city} - {residence.state}</strong>
+            </InfoRow>
+            <InfoRow>
+              <Users />
+              <span>Moradores</span>
+              <strong>{residence.residents}</strong>
+            </InfoRow>
+            <InfoRow>
+              <DoorOpen />
+              <span>Cômodos</span>
+              <strong>{residence.rooms}</strong>
+            </InfoRow>
+            <InfoRow>
+              <Plug />
+              <span>Aparelhos</span>
+              <strong>{totalAppliances} cadastrados</strong>
+            </InfoRow>
+          </InfoList>
+          <StyledLink to="/app/residencia">Gerenciar Residência</StyledLink>
         </Card>
 
         <Card delay={0.5}>
-            <CardHeader><Lightbulb size={18} /> Dica de Economia</CardHeader>
-            <p style={{ flexGrow: 1 }}>{tip.content}</p>
-            <StyledLink to="/app/dicas">Ver mais dicas</StyledLink>
+          <CardHeader><Lightbulb size={18} /> Dica de Economia</CardHeader>
+          <TipContentWrapper>
+            {tip ? (
+              <>
+                <TipCategory>
+                  {categoryIcons[tip.category] || <Home size={14} />}
+                  {tip.category}
+                </TipCategory>
+                <TipTitle>{tip.title}</TipTitle>
+                <TipDescription>{tip.description}</TipDescription>
+              </>
+            ) : (
+              <p>Nenhuma dica disponível no momento.</p>
+            )}
+          </TipContentWrapper>
+          <StyledLink to="/app/dicas">Ver mais dicas</StyledLink>
         </Card>
 
         <Card delay={0.6}>
@@ -281,7 +395,7 @@ const DashboardHome = () => {
             </ActionButton>
           </div>
         </Card>
-
+        
         {residence.monthly_goal_kwh > 0 && (
           <Alert isGood={isWithinGoal}>
             {isWithinGoal ? <Zap size={20} /> : <AlertCircle size={20} />}

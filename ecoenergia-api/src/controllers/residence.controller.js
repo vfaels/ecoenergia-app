@@ -4,7 +4,10 @@ exports.getResidenceData = async (req, res) => {
   const userId = req.userId; 
 
   try {
-    const { rows } = await db.query('SELECT residents, rooms, kwh_cost, monthly_goal_kwh FROM residences WHERE user_id = $1', [userId]);
+    const { rows } = await db.query(
+      'SELECT residents, rooms, kwh_cost, monthly_goal_kwh, city, state FROM residences WHERE user_id = $1', 
+      [userId]
+    );
 
     if (rows.length === 0) {
       return res.status(404).send({ message: 'Dados de residência não encontrados para este usuário.' });
