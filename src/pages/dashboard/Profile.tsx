@@ -46,8 +46,8 @@ const AvatarContainer = styled.div`
 `;
 
 const AvatarImage = styled.img`
-  width: 140px;
-  height: 140px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid ${({ theme }) => theme.primary};
@@ -55,8 +55,8 @@ const AvatarImage = styled.img`
 `;
 
 const AvatarFallback = styled.div`
-  width: 140px;
-  height: 140px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   background-color: ${({ theme }) => theme.cardBg};
   border: 4px solid ${({ theme }) => theme.borderColor};
@@ -145,7 +145,7 @@ const Profile = () => {
           <AvatarImage src={user.avatar_url} alt="Foto de Perfil" />
         ) : (
           <AvatarFallback>
-            <UserCircle2 size={80} />
+            <UserCircle2 size={150} />
           </AvatarFallback>
         )}
       </AvatarContainer>
