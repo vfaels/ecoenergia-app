@@ -2,7 +2,7 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext';
 
-import { LandingPage } from '../pages/LandingPage';
+import LandingPage from '../pages/LandingPage';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import DashboardHome from '../pages/dashboard/DashboardHome';
