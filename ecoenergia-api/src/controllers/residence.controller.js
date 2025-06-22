@@ -24,8 +24,15 @@ exports.updateResidenceSettings = async (req, res) => {
     const userId = req.userId;
     const { residents, rooms, kwh_cost, monthly_goal_kwh, city, state } = req.body;
 
-    if (!residents || !rooms || !kwh_cost || !monthly_goal_kwh || !city || !state) {
-        return res.status(400).send({ message: 'Todos os campos são obrigatórios.' });
+    if (
+      residents == null || 
+      rooms == null || 
+      kwh_cost == null || 
+      monthly_goal_kwh == null || 
+      !city || 
+      !state
+    ) {
+        return res.status(400).send({ message: 'Todos os campos são obrigatórios e devem ser válidos.' });
     }
 
     try {
