@@ -4,23 +4,23 @@ exports.getConsumptionSummary = async (req, res) => {
   const userId = req.userId;
   try {
     const monthResult = await db.query(
-      `SELECT SUM(ch.consumption_kwh) as current_month_kwh
+      `SELECT SUM(ch.consumption) as current_month_kwh
        FROM consumption_history ch
        JOIN residences r ON ch.residence_id = r.id
        WHERE r.user_id = $1 
-       AND EXTRACT(MONTH FROM ch.record_date) = EXTRACT(MONTH FROM CURRENT_DATE)
-       AND EXTRACT(YEAR FROM ch.record_date) = EXTRACT(YEAR FROM CURRENT_DATE)`,
+       AND EXTRACT(MONTH FROM ch.date) = EXTRACT(MONTH FROM CURRENT_DATE)
+       AND EXTRACT(YEAR FROM ch.date) = EXTRACT(YEAR FROM CURRENT_DATE)`,
       [userId]
     );
-
+    
     const comparisonResult = await db.query(
       `SELECT 
-         EXTRACT(MONTH FROM ch.record_date) as month, 
-         SUM(ch.consumption_kwh) as total_kwh
+         EXTRACT(MONTH FROM ch.date) as month, 
+         SUM(ch.consumption) as total_kwh
        FROM consumption_history ch
        JOIN residences r ON ch.residence_id = r.id
-       WHERE r.user_id = $1 AND ch.record_date >= CURRENT_DATE - INTERVAL '3 months'
-       GROUP BY EXTRACT(MONTH FROM ch.record_date)
+       WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '3 months'
+       GROUP BY EXTRACT(MONTH FROM ch.date)
        ORDER BY month DESC`,
        [userId]
     );
@@ -42,12 +42,12 @@ exports.getFullHistory = async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT 
-         TO_CHAR(ch.record_date, 'YYYY-MM-DD') as date, 
-         ch.consumption_kwh as kwh 
+         TO_CHAR(ch.date, 'YYYY-MM-DD') as date, 
+         ch.consumption as kwh 
        FROM consumption_history ch
        JOIN residences r ON ch.residence_id = r.id
-       WHERE r.user_id = $1 AND ch.record_date >= CURRENT_DATE - INTERVAL '29 days' 
-       ORDER BY ch.record_date ASC`,
+       WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '29 days' 
+       ORDER BY ch.date ASC`,
       [userId]
     );
     res.status(200).send(rows);
