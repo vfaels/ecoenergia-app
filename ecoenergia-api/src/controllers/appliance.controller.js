@@ -1,6 +1,5 @@
 const db = require('../config/database');
 
-
 exports.getAppliances = async (req, res) => {
   const userId = req.userId;
   try {
@@ -11,7 +10,6 @@ exports.getAppliances = async (req, res) => {
       [userId]
     );
     
-
     const groupedAppliances = rows.reduce((acc, current) => {
       const category = current.category;
       if (!acc[category]) {
@@ -28,7 +26,6 @@ exports.getAppliances = async (req, res) => {
   }
 };
 
-
 exports.addAppliance = async (req, res) => {
   const userId = req.userId;
   const { name, power_watts, category } = req.body;
@@ -38,9 +35,15 @@ exports.addAppliance = async (req, res) => {
   }
 
   try {
+    const residenceResult = await db.query('SELECT id FROM residences WHERE user_id = $1', [userId]);
+    if (residenceResult.rows.length === 0) {
+      return res.status(404).send({ message: 'Residência do usuário não encontrada.' });
+    }
+    const residenceId = residenceResult.rows[0].id;
+
     const { rows } = await db.query(
-      'INSERT INTO appliances (name, power_watts, category, user_id) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, power_watts, category, userId]
+      'INSERT INTO appliances (name, power_watts, category, residence_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, power_watts, category, residenceId]
     );
     res.status(201).send({ message: 'Aparelho adicionado com sucesso!', appliance: rows[0] });
   } catch (error) {
@@ -48,7 +51,6 @@ exports.addAppliance = async (req, res) => {
     res.status(500).send({ message: 'Erro interno do servidor.' });
   }
 };
-
 
 exports.updateAppliance = async (req, res) => {
     const userId = req.userId;
@@ -61,7 +63,10 @@ exports.updateAppliance = async (req, res) => {
 
     try {
         const { rows } = await db.query(
-            'UPDATE appliances SET name = $1, power_watts = $2, category = $3 WHERE id = $4 AND user_id = $5 RETURNING *',
+            `UPDATE appliances a SET name = $1, power_watts = $2, category = $3
+             FROM residences r
+             WHERE a.id = $4 AND a.residence_id = r.id AND r.user_id = $5
+             RETURNING a.*`,
             [name, power_watts, category, applianceId, userId]
         );
 
@@ -86,7 +91,9 @@ exports.deleteAppliance = async (req, res) => {
 
   try {
     const result = await db.query(
-      'DELETE FROM appliances WHERE id = $1 AND user_id = $2',
+      `DELETE FROM appliances a
+       USING residences r
+       WHERE a.id = $1 AND a.residence_id = r.id AND r.user_id = $2`,
       [applianceId, userId]
     );
 
