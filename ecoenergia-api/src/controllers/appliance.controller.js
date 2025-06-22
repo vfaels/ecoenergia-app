@@ -4,7 +4,12 @@ const db = require('../config/database');
 exports.getAppliances = async (req, res) => {
   const userId = req.userId;
   try {
-    const { rows } = await db.query('SELECT * FROM appliances WHERE user_id = $1 ORDER BY category, name', [userId]);
+    const { rows } = await db.query(
+      `SELECT a.* FROM appliances a
+       JOIN residences r ON a.residence_id = r.id
+       WHERE r.user_id = $1 ORDER BY a.category, a.name`,
+      [userId]
+    );
     
 
     const groupedAppliances = rows.reduce((acc, current) => {
