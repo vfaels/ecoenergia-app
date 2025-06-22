@@ -1,6 +1,4 @@
 const db = require('../config/database');
-const fs = require('fs').promises; 
-const path = require('path');
 const supabase = require('../config/supabase');
 
 exports.getUserProfile = async (req, res) => {
@@ -30,34 +28,50 @@ exports.updateAvatar = async (req, res) => {
     }
 
     try {
-        const file = req.file;
-        const fileName = `<span class="math-inline">\{userId\}\-</span>{Date.now()}-${file.originalname}`;
+        const { rows: userRows } = await db.query('SELECT avatar_url FROM users WHERE id = $1', [userId]);
+        const currentAvatarUrl = userRows[0]?.avatar_url;
 
-        const { data, error } = await supabase.storage
+        if (currentAvatarUrl) {
+            const oldFileName = currentAvatarUrl.split('/').pop();
+
+            try {
+                await supabase.storage.from('avatars').remove([oldFileName]);
+            } catch (removeError) {
+                console.warn("Aviso: Falha ao tentar remover o avatar antigo.", removeError.message);
+            }
+        }
+
+        const file = req.file;
+        const fileName = `${userId}-${Date.now()}-${file.originalname}`;
+
+        const { error: uploadError } = await supabase.storage
             .from('avatars')
             .upload(fileName, file.buffer, {
                 contentType: file.mimetype,
             });
 
-        if (error) {
-            throw error;
+        if (uploadError) {
+            throw new Error(`Erro do Supabase ao fazer upload: ${uploadError.message}`);
         }
 
         const { data: publicUrlData } = supabase.storage
             .from('avatars')
             .getPublicUrl(fileName);
 
-        const avatar_url = publicUrlData.publicUrl;
+        let avatar_url = publicUrlData.publicUrl;
+        if (avatar_url.startsWith('http://')) {
+            avatar_url = avatar_url.replace('http://', 'https://');
+        }
 
-        const { rows } = await db.query(
+        const { rows: updatedUser } = await db.query(
             'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING avatar_url',
             [avatar_url, userId]
         );
-
-        res.status(200).send({ avatar_url: rows[0].avatar_url });
+            
+        res.status(200).send({ avatar_url: updatedUser[0].avatar_url });
 
     } catch (error) {
-        console.error('Erro no upload do avatar para o Supabase:', error);
+        console.error('Erro no processo de atualização do avatar:', error);
         res.status(500).send({ message: 'Erro interno do servidor ao fazer upload.' });
     }
 };
@@ -97,8 +111,7 @@ exports.removeAvatar = async (req, res) => {
         const currentAvatarUrl = userRows[0]?.avatar_url;
 
         if (currentAvatarUrl) {
-            const fileName = currentAvatarUrl.split('/').pop(); 
-
+            const fileName = currentAvatarUrl.split('/').pop();
             await supabase.storage.from('avatars').remove([fileName]);
         }
 
@@ -107,7 +120,9 @@ exports.removeAvatar = async (req, res) => {
             [userId]
         );
 
+        delete updatedUserRows[0].password;
         res.status(200).send(updatedUserRows[0]);
+
     } catch (error) {
         console.error('Erro ao remover avatar:', error);
         res.status(500).send({ message: 'Erro interno do servidor.' });
