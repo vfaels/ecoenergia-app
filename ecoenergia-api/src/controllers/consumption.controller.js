@@ -39,17 +39,43 @@ exports.getConsumptionSummary = async (req, res) => {
 
 exports.getFullHistory = async (req, res) => {
   const userId = req.userId;
+  const { period = '30d' } = req.query;
+
+  let query;
+  const params = [userId];
+
+  switch (period) {
+    case '7d':
+      query = `
+        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, ch.consumption as kwh 
+        FROM consumption_history ch
+        JOIN residences r ON ch.residence_id = r.id
+        WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '6 days'
+        ORDER BY ch.date ASC`;
+      break;
+    
+    case 'this_month':
+      query = `
+        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, ch.consumption as kwh 
+        FROM consumption_history ch
+        JOIN residences r ON ch.residence_id = r.id
+        WHERE r.user_id = $1 AND date_trunc('month', ch.date) = date_trunc('month', CURRENT_DATE)
+        ORDER BY ch.date ASC`;
+      break;
+
+    case '30d':
+    default:
+      query = `
+        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, ch.consumption as kwh 
+        FROM consumption_history ch
+        JOIN residences r ON ch.residence_id = r.id
+        WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '29 days'
+        ORDER BY ch.date ASC`;
+      break;
+  }
+
   try {
-    const { rows } = await db.query(
-      `SELECT 
-         TO_CHAR(ch.date, 'YYYY-MM-DD') as date, 
-         ch.consumption as kwh 
-       FROM consumption_history ch
-       JOIN residences r ON ch.residence_id = r.id
-       WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '29 days' 
-       ORDER BY ch.date ASC`,
-      [userId]
-    );
+    const { rows } = await db.query(query, params);
     res.status(200).send(rows);
   } catch (error) {
     console.error('Erro ao buscar histórico completo:', error);
