@@ -51,7 +51,7 @@ exports.getFullHistory = async (req, res) => {
           SUM(ch.consumption) as kwh 
         FROM consumption_history ch
         JOIN residences r ON ch.residence_id = r.id
-        WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '6 days'
+        WHERE r.user_id = $1 AND ch.date > NOW() - INTERVAL '7 days'
         GROUP BY ch.date
         ORDER BY ch.date ASC`;
       break;
@@ -75,7 +75,7 @@ exports.getFullHistory = async (req, res) => {
           SUM(ch.consumption) as kwh 
         FROM consumption_history ch
         JOIN residences r ON ch.residence_id = r.id
-        WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '29 days'
+        WHERE r.user_id = $1 AND ch.date > NOW() - INTERVAL '30 days'
         GROUP BY ch.date
         ORDER BY ch.date ASC`;
       break;
