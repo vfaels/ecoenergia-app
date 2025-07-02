@@ -103,19 +103,9 @@ const History = () => {
   }, [history, config]);
 
   const formattedChartData = useMemo(() => {
-    const grouped: Record<string, number> = {};
-
-    history.forEach((item) => {
-      const dateKey = new Date(item.date).toISOString().split('T')[0]; // '2025-07-02'
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = 0;
-      }
-      grouped[dateKey] += Number(item.kwh);
-    });
-
-    return Object.entries(grouped).map(([date, kwh]) => ({
-      date: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-      kwh
+    return history.map(item => ({
+      date: new Date(item.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      kwh: Number(item.kwh)
     }));
   }, [history]);
 

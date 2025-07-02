@@ -83,7 +83,11 @@ exports.getFullHistory = async (req, res) => {
 
   try {
     const { rows } = await db.query(query, params);
-    res.status(200).send(rows);
+    const formattedRows = rows.map(row => ({
+      ...row,
+      kwh: parseFloat(row.kwh) || 0
+    }));
+    res.status(200).send(formattedRows);
   } catch (error) {
     console.error('Erro ao buscar histórico completo:', error);
     res.status(500).send({ message: 'Erro interno do servidor.' });
