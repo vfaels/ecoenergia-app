@@ -47,29 +47,36 @@ exports.getFullHistory = async (req, res) => {
   switch (period) {
     case '7d':
       query = `
-        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, ch.consumption as kwh 
+        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, 
+          SUM(ch.consumption) as kwh 
         FROM consumption_history ch
         JOIN residences r ON ch.residence_id = r.id
         WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '6 days'
+        GROUP BY ch.date
         ORDER BY ch.date ASC`;
       break;
     
     case 'this_month':
       query = `
-        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, ch.consumption as kwh 
+        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, 
+          SUM(ch.consumption) as kwh 
         FROM consumption_history ch
         JOIN residences r ON ch.residence_id = r.id
-        WHERE r.user_id = $1 AND date_trunc('month', ch.date) = date_trunc('month', CURRENT_DATE)
+        WHERE r.user_id = $1 
+          AND date_trunc('month', ch.date) = date_trunc('month', CURRENT_DATE)
+        GROUP BY ch.date
         ORDER BY ch.date ASC`;
       break;
 
     case '30d':
     default:
       query = `
-        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, ch.consumption as kwh 
+        SELECT TO_CHAR(ch.date, 'YYYY-MM-DD') as date, 
+          SUM(ch.consumption) as kwh 
         FROM consumption_history ch
         JOIN residences r ON ch.residence_id = r.id
         WHERE r.user_id = $1 AND ch.date >= CURRENT_DATE - INTERVAL '29 days'
+        GROUP BY ch.date
         ORDER BY ch.date ASC`;
       break;
   }
